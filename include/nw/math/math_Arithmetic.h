@@ -68,7 +68,7 @@ FMod(f32 x, f32 y)
 inline f32
 FModf(f32 x, f32* y)
 {
-    return ::std::modf(x, y);
+    return ::std::modff(x, y);
 }
 
 inline f32
