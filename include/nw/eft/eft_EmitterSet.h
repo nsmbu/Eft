@@ -31,7 +31,7 @@ public:
 
     void SetEmissionRatio(s32 ratio)
     {
-        mEmissionRatio = static_cast<f32>(ratio) / EFT_EMT_CTRLR_SCALE_ONE;
+        mEmissionRatio = static_cast<f32>(ratio) / static_cast<f32>(EFT_EMT_CTRLR_SCALE_ONE);
     }
 
     void SetEmissionRatio(f32 ratio)
@@ -41,7 +41,7 @@ public:
 
     void SetEmissionInterval(s32 ratio)
     {
-        mEmissionInterval = static_cast<f32>(ratio) / EFT_EMT_CTRLR_SCALE_ONE;
+        mEmissionInterval = static_cast<f32>(ratio) / static_cast<f32>(EFT_EMT_CTRLR_SCALE_ONE);
     }
 
     void SetEmissionInterval(f32 ratio)
@@ -51,7 +51,7 @@ public:
 
     void SetLife(s32 ratio)
     {
-        mLife = static_cast<f32>(ratio) / EFT_EMT_CTRLR_SCALE_ONE;
+        mLife = static_cast<f32>(ratio) / static_cast<f32>(EFT_EMT_CTRLR_SCALE_ONE);
     }
 
     void SetLife(f32 ratio)
