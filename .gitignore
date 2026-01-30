@@ -42,3 +42,9 @@
 *.opt
 *.ti
 tgt/*
+
+# macOS files
+.DS_Store
+
+# IDE files
+.vscode/
