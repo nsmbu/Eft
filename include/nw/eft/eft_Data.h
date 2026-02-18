@@ -1009,7 +1009,7 @@ struct ComplexEmitterData : public SimpleEmitterData
     u16                 fieldFlg;
     u16                 fluctuationFlg;
     u16                 stripeFlg;
-    u16                 dummy;
+    u16                 dummy2;
 
     u16                 childDataOffset;
     u16                 fieldDataOffset;

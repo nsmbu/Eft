@@ -86,7 +86,7 @@ struct VertexShaderKey
 
     void MakeKeyFromSimpleEmitterData(const SimpleEmitterData* res, const char* userDef)
     {
-        mVertexBillboardTypeVariation = res->billboardType;
+        mVertexBillboardTypeVariation = VertexBillboardTypeVariation(res->billboardType);
         mVertexRotationVariation      = (res->ptclRotType != EFT_ROT_TYPE_NO_WORK) ? 1 : 0;
         mUserShaderSetting            = res->userShaderSetting;
         mUserShaderFlag               = res->userShaderFlag;
@@ -110,7 +110,7 @@ struct VertexShaderKey
         {
             const StripeData* stripeRes = reinterpret_cast<const StripeData*>((u32)res + res->stripeDataOffset);
 
-            mStripeTypeVariation = stripeRes->stripeType;
+            mStripeTypeVariation = VertexStripeVariation(stripeRes->stripeType);
             if (res->stripeFlg & EFT_STRIPE_FLAG_EMITTER_COORD)
                 mStripeEmitterCoord = true;
             else
@@ -129,7 +129,7 @@ struct VertexShaderKey
 
     void MakeKeyFromChildData(const ChildData* res, const char* userDef)
     {
-        mVertexBillboardTypeVariation = res->childBillboardType;
+        mVertexBillboardTypeVariation = VertexBillboardTypeVariation(res->childBillboardType);
         mVertexRotationVariation      = (res->childRotType != EFT_ROT_TYPE_NO_WORK) ? 1 : 0;
         mUserShaderSetting            = res->childUserShaderSetting;
         mUserShaderFlag               = res->childUserShaderFlag;

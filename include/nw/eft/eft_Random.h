@@ -73,7 +73,7 @@ public:
 
     f32 GetF32()
     {
-        return GetU32() * (1.0f / 4294967296.0f);
+        return f32(GetU32()) * (1.0f / 4294967296.0f);
     }
 
     f32 GetF32(f32 ceil)
@@ -139,9 +139,9 @@ public:
 
     void SetSeed(u32 val)
     {
-        mVec3RndIx           = val >> 0;
-        mNormalizedVec3RndIx = val >> 16;
-        mRnd                 = val;
+        mVec3RndIx           = u16(val) >> 0;
+        mNormalizedVec3RndIx = u16(val) >> 16;
+        mRnd                 = u16(val);
     }
 
     const nw::math::VEC3& GetVec3          () { return mVec3Tbl          [ ( mVec3RndIx++ )           & cNumVec3TblMask ]; }
@@ -156,7 +156,7 @@ public:
 
     f32 GetF32()
     {
-        return GetU32Direct() * (1.0f / 4294967296.0f);
+        return f32(GetU32Direct()) * (1.0f / 4294967296.0f);
     }
 
     /* f32 GetF32(f32 ceil)

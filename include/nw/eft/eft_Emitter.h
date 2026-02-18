@@ -17,7 +17,7 @@ struct EmitterDynamicUniformBlock;
 class  EmitterSet;
 struct EmitterStaticUniformBlock;
 struct PtclAttributeBuffer;
-class  StripeVertexBuffer;
+struct StripeVertexBuffer;
 
 struct EmitterInstance
 {
