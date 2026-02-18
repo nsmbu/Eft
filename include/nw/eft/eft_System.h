@@ -14,7 +14,7 @@ class EmitterSet;
 struct EmitterStaticUniformBlock;
 class Handle;
 class Heap;
-class PtclStripe;
+struct PtclStripe;
 class Renderer;
 class Resource;
 struct ScaleAnim;
