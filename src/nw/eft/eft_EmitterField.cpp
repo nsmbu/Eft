@@ -35,7 +35,7 @@ const void* EmitterCalc::_ptclField_Spin(EmitterInstance* __restrict e, PtclInst
 {
     const FieldSpinData* dat = static_cast<const FieldSpinData*>(fieldData);
 
-    register float sinV, cosV;
+    float sinV, cosV;
     u32 idx = (u32)(dat->fieldSpinRotate * e->frameRate * ptcl->dynamicsRnd);
     nw::math::SinCosIdx(&sinV, &cosV, idx);
 
@@ -111,7 +111,7 @@ const void* EmitterCalc::_ptclField_Collision(EmitterInstance* __restrict e, Ptc
 
     if (dat->fieldCollisionIsWorld)
     {
-        register nw::math::VEC3 worldPos;
+        nw::math::VEC3 worldPos;
 
         nw::math::MTX34* matEmitter;
 
@@ -136,7 +136,7 @@ const void* EmitterCalc::_ptclField_Collision(EmitterInstance* __restrict e, Ptc
             {
                 worldPos.y = y + EPSILON;
 
-                register nw::math::VEC3 worldVel;
+                nw::math::VEC3 worldVel;
                 {
                     f32 tx = ptcl->vel.x;
                     f32 ty = ptcl->vel.y;

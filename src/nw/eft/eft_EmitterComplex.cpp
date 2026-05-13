@@ -16,7 +16,7 @@ void EmitterComplexCalc::CalcComplex(EmitterInstance* e, PtclInstance* ptcl, Cpu
     const ComplexEmitterData* __restrict res  = static_cast<const ComplexEmitterData*>(e->res);
     const ChildData*          __restrict cres = reinterpret_cast<const ChildData*>(res + 1);
 
-    register s32 cnt = (s32)ptcl->cnt - 1;
+    s32 cnt = (s32)ptcl->cnt - 1;
 
     if (res->billboardType == EFT_BILLBOARD_TYPE_STRIPE)
     {

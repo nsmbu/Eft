@@ -94,7 +94,7 @@ void EmitterSimpleCalc::EmitSameDistance(const SimpleEmitterData* __restrict res
             if (virtualLength != 0.0f)
                 ratio = vessel / virtualLength;
 
-            register nw::math::VEC3 pos;
+            nw::math::VEC3 pos;
             pos = currPos * (1.0f - ratio) + prevPos * ratio;
 
             e->emitterRT._03  = pos.x;
@@ -146,8 +146,8 @@ void EmitterSimpleCalc::CalcEmitter(EmitterInstance* e)
     ApplyAnim(e);
     ApplyTransformAnim(e);
 
-    register s32 cnt      = (s32)e->cnt;
-    register s32 localCnt = cnt - set->mStartFrame;
+    s32 cnt      = (s32)e->cnt;
+    s32 localCnt = cnt - set->mStartFrame;
 
     if (localCnt < res->endFrame && isParticleEmit)
     {

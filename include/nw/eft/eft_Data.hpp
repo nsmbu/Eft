@@ -4,7 +4,7 @@
 #include <nw/eft/eft_Data.h>
 #include <nw/eft/eft_Shader.h>
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
 
 #include <cassert>
 
@@ -24,13 +24,13 @@ static inline void Swap32(void* buf, u32 count)
         Swap32((u32*)buf + i);
 }
 
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
 static inline nw::eft::HeaderData* LoadNwEftHeaderData(void* data, bool is_be = true)
 {
     nw::eft::HeaderData* header = static_cast<nw::eft::HeaderData*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         assert(header != NULL);
@@ -51,7 +51,7 @@ static inline nw::eft::HeaderData* LoadNwEftHeaderData(void* data, bool is_be = 
         Swap32(&header->totalShaderSize);
         Swap32(&header->totalEmitterSize);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return header;
 }
@@ -60,7 +60,7 @@ static inline nw::eft::ShaderImageInformation* LoadNwEftShaderImageInformation(v
 {
     nw::eft::ShaderImageInformation* shaderImageInfo = static_cast<nw::eft::ShaderImageInformation*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap32(&shaderImageInfo->shaderNum);
@@ -68,7 +68,7 @@ static inline nw::eft::ShaderImageInformation* LoadNwEftShaderImageInformation(v
         Swap32(&shaderImageInfo->offsetShaderSrcInfo);
         Swap32(&shaderImageInfo->offsetShaderBinInfo);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return shaderImageInfo;
 }
@@ -77,13 +77,13 @@ static inline nw::eft::VertexShaderKey* LoadNwEftVertexShaderKey(void* data, boo
 {
     nw::eft::VertexShaderKey* vertexShaderKey = static_cast<nw::eft::VertexShaderKey*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap32(&vertexShaderKey->mUserShaderFlag);
         Swap32(&vertexShaderKey->mUserShaderSwitchFlag);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return vertexShaderKey;
 }
@@ -92,7 +92,7 @@ static inline nw::eft::FragmentShaderKey* LoadNwEftFragmentShaderKey(void* data,
 {
     nw::eft::FragmentShaderKey* fragmentShaderKey = static_cast<nw::eft::FragmentShaderKey*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap16(&fragmentShaderKey->_12);
@@ -100,7 +100,7 @@ static inline nw::eft::FragmentShaderKey* LoadNwEftFragmentShaderKey(void* data,
         Swap32(&fragmentShaderKey->mUserShaderSwitchFlag);
         Swap16(&fragmentShaderKey->_2c);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return fragmentShaderKey;
 }
@@ -109,7 +109,7 @@ static inline nw::eft::ShaderInformation* LoadNwEftShaderInformation(void* data,
 {
     nw::eft::ShaderInformation* shaderInfo = static_cast<nw::eft::ShaderInformation*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     (void)LoadNwEftVertexShaderKey(&shaderInfo->vertexShaderKey, is_be);
     (void)LoadNwEftFragmentShaderKey(&shaderInfo->fragmentShaderKey, is_be);
     //(void)LoadNwEftGeometryShaderKey(&shaderInfo->geometryShaderKey, is_be);
@@ -119,7 +119,7 @@ static inline nw::eft::ShaderInformation* LoadNwEftShaderInformation(void* data,
         Swap32(&shaderInfo->shaderSize);
         Swap32(&shaderInfo->offset);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return shaderInfo;
 }
@@ -128,14 +128,14 @@ static inline nw::eft::PrimitiveImageInformation* LoadNwEftPrimitiveImageInforma
 {
     nw::eft::PrimitiveImageInformation* imageInfo = static_cast<nw::eft::PrimitiveImageInformation*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap32(&imageInfo->primitiveNum);
         Swap32(&imageInfo->totalSize);
         Swap32(&imageInfo->offsetPrimitiveTableInfo);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return imageInfo;
 }
@@ -144,7 +144,7 @@ static inline nw::eft::PrimitiveTableInfo::PrimDataTable* LoadNwEftPrimitiveTabl
 {
     nw::eft::PrimitiveTableInfo::PrimDataTable* primitiveAttrib = static_cast<nw::eft::PrimitiveTableInfo::PrimDataTable*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap32(&primitiveAttrib->count);
@@ -152,7 +152,7 @@ static inline nw::eft::PrimitiveTableInfo::PrimDataTable* LoadNwEftPrimitiveTabl
         Swap32(&primitiveAttrib->offset);
         Swap32(&primitiveAttrib->size);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return primitiveAttrib;
 }
@@ -161,13 +161,13 @@ static inline nw::eft::PrimitiveTableInfo* LoadNwEftPrimitiveTableInfo(void* dat
 {
     nw::eft::PrimitiveTableInfo* info = static_cast<nw::eft::PrimitiveTableInfo*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     (void)LoadNwEftPrimitiveTableInfoPrimDataTable(&info->pos, is_be);
     (void)LoadNwEftPrimitiveTableInfoPrimDataTable(&info->normal, is_be);
     (void)LoadNwEftPrimitiveTableInfoPrimDataTable(&info->color, is_be);
     (void)LoadNwEftPrimitiveTableInfoPrimDataTable(&info->texCoord, is_be);
     (void)LoadNwEftPrimitiveTableInfoPrimDataTable(&info->index, is_be);
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return info;
 }
@@ -176,7 +176,7 @@ static inline nw::eft::EmitterSetData* LoadNwEftEmitterSetData(void* data, bool 
 {
     nw::eft::EmitterSetData* emitterSetData = static_cast<nw::eft::EmitterSetData*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap32(&emitterSetData->userData);
@@ -187,7 +187,7 @@ static inline nw::eft::EmitterSetData* LoadNwEftEmitterSetData(void* data, bool 
         Swap32(&emitterSetData->emitterTblPos);
         Swap32(&emitterSetData->emitterTbl);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return emitterSetData;
 }
@@ -196,13 +196,13 @@ static inline nw::eft::EmitterTblData* LoadNwEftEmitterTblData(void* data, bool 
 {
     nw::eft::EmitterTblData* emitterTblData = static_cast<nw::eft::EmitterTblData*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap32(&emitterTblData->emitterPos);
         Swap32(&emitterTblData->emitter);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return emitterTblData;
 }
@@ -211,7 +211,7 @@ static inline nw::eft::TextureRes* LoadNwEftTextureRes(void* data, bool is_be = 
 {
     nw::eft::TextureRes* texRes = static_cast<nw::eft::TextureRes*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap16(&texRes->width);
@@ -233,7 +233,7 @@ static inline nw::eft::TextureRes* LoadNwEftTextureRes(void* data, bool is_be = 
         Swap32(&texRes->nativeDataPos);
         Swap32(&texRes->handle);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return texRes;
 }
@@ -242,14 +242,14 @@ static inline nw::eft::AnimKeyTable* LoadNwEftAnimKeyTable(void* data, bool is_b
 {
     nw::eft::AnimKeyTable* animKeyTable = static_cast<nw::eft::AnimKeyTable*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap32(&animKeyTable->animKeyTable);
         Swap32(&animKeyTable->animPos);
         Swap32(&animKeyTable->dataSize);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return animKeyTable;
 }
@@ -258,14 +258,14 @@ static inline nw::eft::PrimitiveFigure* LoadNwEftPrimitiveFigure(void* data, boo
 {
     nw::eft::PrimitiveFigure* primitiveFigure = static_cast<nw::eft::PrimitiveFigure*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap32(&primitiveFigure->primitiveTableInfo);
         Swap32(&primitiveFigure->dataSize);
         Swap32(&primitiveFigure->index);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return primitiveFigure;
 }
@@ -274,7 +274,7 @@ static inline nw::eft::TextureEmitterData* LoadNwEftTextureEmitterData(void* dat
 {
     nw::eft::TextureEmitterData* textureData = static_cast<nw::eft::TextureEmitterData*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap16(&textureData->texPatFreq);
@@ -293,7 +293,7 @@ static inline nw::eft::TextureEmitterData* LoadNwEftTextureEmitterData(void* dat
         Swap32(&textureData->uvRotInit);
         Swap32(&textureData->uvRotInitRand);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return textureData;
 }
@@ -302,12 +302,12 @@ static inline nw::eft::UserShaderParam* LoadNwEftUserShaderParam(void* data, boo
 {
     nw::eft::UserShaderParam* userShaderParam = static_cast<nw::eft::UserShaderParam*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap32(&userShaderParam->param, 32);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return userShaderParam;
 }
@@ -316,7 +316,7 @@ static inline nw::eft::ChildData* LoadNwEftChildData(void* data, bool is_be = tr
 {
     nw::eft::ChildData* childData = static_cast<nw::eft::ChildData*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     (void)LoadNwEftPrimitiveFigure(&childData->childPrimitiveFigure, is_be);
     (void)LoadNwEftTextureRes(&childData->childTex, is_be);
     (void)LoadNwEftUserShaderParam(&childData->childUserShaderParam, is_be);
@@ -374,7 +374,7 @@ static inline nw::eft::ChildData* LoadNwEftChildData(void* data, bool is_be = tr
         Swap32(&childData->childUserShaderFlag);
         Swap32(&childData->childUserShaderSwitchFlag);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return childData;
 }
@@ -383,13 +383,13 @@ static inline nw::eft::FieldRandomData* LoadNwEftFieldRandomData(void* data, boo
 {
     nw::eft::FieldRandomData* dat = static_cast<nw::eft::FieldRandomData*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap32(&dat->fieldRandomBlank);
         Swap32(&dat->fieldRandomVelAdd, 3);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return dat;
 }
@@ -398,14 +398,14 @@ static inline nw::eft::FieldMagnetData* LoadNwEftFieldMagnetData(void* data, boo
 {
     nw::eft::FieldMagnetData* dat = static_cast<nw::eft::FieldMagnetData*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap32(&dat->fieldMagnetPower);
         Swap32(&dat->fieldMagnetPos, 3);
         Swap32(&dat->fieldMagnetFlg);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return dat;
 }
@@ -414,14 +414,14 @@ static inline nw::eft::FieldSpinData* LoadNwEftFieldSpinData(void* data, bool is
 {
     nw::eft::FieldSpinData* dat = static_cast<nw::eft::FieldSpinData*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap32(&dat->fieldSpinRotate);
         Swap32(&dat->fieldSpinAxis);
         Swap32(&dat->fieldSpinOuter);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return dat;
 }
@@ -430,7 +430,7 @@ static inline nw::eft::FieldCollisionData* LoadNwEftFieldCollisionData(void* dat
 {
     nw::eft::FieldCollisionData* dat = static_cast<nw::eft::FieldCollisionData*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap16(&dat->fieldCollisionType);
@@ -438,7 +438,7 @@ static inline nw::eft::FieldCollisionData* LoadNwEftFieldCollisionData(void* dat
         Swap32(&dat->fieldCollisionCoord);
         Swap32(&dat->fieldCollisionCoef);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return dat;
 }
@@ -447,13 +447,13 @@ static inline nw::eft::FieldConvergenceData* LoadNwEftFieldConvergenceData(void*
 {
     nw::eft::FieldConvergenceData* dat = static_cast<nw::eft::FieldConvergenceData*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap32(&dat->fieldConvergencePos, 3);
         Swap32(&dat->fieldConvergenceRatio);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return dat;
 }
@@ -462,19 +462,19 @@ static inline nw::eft::FieldPosAddData* LoadNwEftFieldPosAddData(void* data, boo
 {
     nw::eft::FieldPosAddData* dat = static_cast<nw::eft::FieldPosAddData*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap32(&dat->fieldPosAdd, 3);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return dat;
 }
 
 static inline void* LoadNwEftFieldData(void* data, u16 fieldFlg, bool is_be = true)
 {
-#if EFT_IS_WIN
+#if EFT_IS_PC
     void* fieldData = data;
 
     if ( fieldFlg & nw::eft::EFT_FIELD_MASK_RANDOM      ) fieldData = LoadNwEftFieldRandomData     (fieldData, is_be) + 1;
@@ -483,7 +483,7 @@ static inline void* LoadNwEftFieldData(void* data, u16 fieldFlg, bool is_be = tr
     if ( fieldFlg & nw::eft::EFT_FIELD_MASK_COLLISION   ) fieldData = LoadNwEftFieldCollisionData  (fieldData, is_be) + 1;
     if ( fieldFlg & nw::eft::EFT_FIELD_MASK_CONVERGENCE ) fieldData = LoadNwEftFieldConvergenceData(fieldData, is_be) + 1;
     if ( fieldFlg & nw::eft::EFT_FIELD_MASK_POSADD      ) fieldData = LoadNwEftFieldPosAddData     (fieldData, is_be) + 1;
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return data;
 }
@@ -492,14 +492,14 @@ static inline nw::eft::FluctuationData* LoadNwEftFluctuationData(void* data, boo
 {
     nw::eft::FluctuationData* fluctuationData = static_cast<nw::eft::FluctuationData*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap32(&fluctuationData->fluctuationScale);
         Swap32(&fluctuationData->fluctuationFreq);
         Swap32(&fluctuationData->fluctuationPhaseRnd);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return fluctuationData;
 }
@@ -508,7 +508,7 @@ static inline nw::eft::StripeData* LoadNwEftStripeData(void* data, bool is_be = 
 {
     nw::eft::StripeData* stripeData = static_cast<nw::eft::StripeData*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap32(&stripeData->stripeType);
@@ -524,7 +524,7 @@ static inline nw::eft::StripeData* LoadNwEftStripeData(void* data, bool is_be = 
         Swap32(&stripeData->stripeHistoryInterpolate);
         Swap32(&stripeData->stripeDirInterpolate);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return stripeData;
 }
@@ -533,7 +533,7 @@ static inline nw::eft::CommonEmitterData* LoadNwEftEmitterData(void* data, bool 
 {
     nw::eft::ComplexEmitterData* res = static_cast<nw::eft::ComplexEmitterData*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     /* nw::eft::CommonEmitterData */
 
     (void)LoadNwEftTextureRes(&res->texRes[nw::eft::EFT_TEXTURE_SLOT_0], is_be);
@@ -698,7 +698,7 @@ static inline nw::eft::CommonEmitterData* LoadNwEftEmitterData(void* data, bool 
             (void)LoadNwEftStripeData((void*)((u32)res + res->stripeDataOffset));
         }
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return res;
 }
@@ -707,13 +707,13 @@ static inline nw::eft::AnimKeyFrameKey* LoadNwEftAnimKeyFrameKey(void* data, boo
 {
     nw::eft::AnimKeyFrameKey* key = static_cast<nw::eft::AnimKeyFrameKey*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap32(&key->x);
         Swap32(&key->y);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return key;
 }
@@ -722,7 +722,7 @@ static inline nw::eft::KeyFrameAnim* LoadNwEftKeyFrameAnim(void* data, bool is_b
 {
     nw::eft::KeyFrameAnim* info = static_cast<nw::eft::KeyFrameAnim*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap32(&info->keyNum);
@@ -735,7 +735,7 @@ static inline nw::eft::KeyFrameAnim* LoadNwEftKeyFrameAnim(void* data, bool is_b
     nw::eft::AnimKeyFrameKey* keys = reinterpret_cast<nw::eft::AnimKeyFrameKey*>(info + 1);
     for (u32 i = 0; i < info->keyNum; i++)
         (void)LoadNwEftAnimKeyFrameKey(&keys[i], is_be);
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return info;
 }
@@ -744,7 +744,7 @@ static inline nw::eft::KeyFrameAnimArray* LoadNwEftKeyFrameAnimArray(void* data,
 {
     nw::eft::KeyFrameAnimArray* keyAnimArray = static_cast<nw::eft::KeyFrameAnimArray*>(data);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (is_be)
     {
         Swap32(&keyAnimArray->numAnims);
@@ -758,7 +758,7 @@ static inline nw::eft::KeyFrameAnimArray* LoadNwEftKeyFrameAnimArray(void* data,
 
         (void)LoadNwEftKeyFrameAnim(info, is_be);
     }
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
     return keyAnimArray;
 }

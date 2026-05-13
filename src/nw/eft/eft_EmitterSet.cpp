@@ -60,7 +60,7 @@ void EmitterSet::SetMtx(const nw::math::MTX34& mtx)
 
     if (mAutoCalcScale.x > 0.0f)
     {
-        register f32 inv = 1.0f / mAutoCalcScale.x;
+        f32 inv = 1.0f / mAutoCalcScale.x;
 
         mRT.m[0][0] = mtx.m[0][0] * inv;
         mRT.m[1][0] = mtx.m[1][0] * inv;
@@ -73,7 +73,7 @@ void EmitterSet::SetMtx(const nw::math::MTX34& mtx)
 
     if (mAutoCalcScale.y > 0.0f)
     {
-        register f32 inv = 1.0f / mAutoCalcScale.y;
+        f32 inv = 1.0f / mAutoCalcScale.y;
 
         mRT.m[0][1] = mtx.m[0][1] * inv;
         mRT.m[1][1] = mtx.m[1][1] * inv;
@@ -86,7 +86,7 @@ void EmitterSet::SetMtx(const nw::math::MTX34& mtx)
 
     if (mAutoCalcScale.z > 0.0f)
     {
-        register f32 inv = 1.0f / mAutoCalcScale.z;
+        f32 inv = 1.0f / mAutoCalcScale.z;
 
         mRT.m[0][2] = mtx.m[0][2] * inv;
         mRT.m[1][2] = mtx.m[1][2] * inv;

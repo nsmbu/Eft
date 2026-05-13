@@ -4,7 +4,7 @@
 #include <nw/eft/eft_Data.h>
 #include <nw/eft/eft_Heap.h>
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
 
 namespace nw { namespace eft {
 
@@ -195,6 +195,6 @@ private:
 
 } } // namespace nw::eft
 
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
 #endif // EFT_GL_WRAPPER_H_

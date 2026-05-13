@@ -5,7 +5,7 @@ namespace nw { namespace eft {
 
 void Renderer::BindParticleAttributeBlock(PtclAttributeBuffer* ptclAttributeBuffer, ParticleShader* shader, u32 entryNum)
 {
-#if EFT_IS_WIN
+#if EFT_IS_PC
     VertexBuffer::BindExtBuffer(shader->mWldPosAttr,     4, sizeof(PtclAttributeBuffer),  0 * 4);
     VertexBuffer::BindExtBuffer(shader->mSclAttr,        4, sizeof(PtclAttributeBuffer),  4 * 4);
     VertexBuffer::BindExtBuffer(shader->mColor0Attr,     4, sizeof(PtclAttributeBuffer),  8 * 4);
@@ -17,7 +17,7 @@ void Renderer::BindParticleAttributeBlock(PtclAttributeBuffer* ptclAttributeBuff
     VertexBuffer::BindExtBuffer(shader->mEmtMatAttr0,    4, sizeof(PtclAttributeBuffer), 32 * 4);
     VertexBuffer::BindExtBuffer(shader->mEmtMatAttr1,    4, sizeof(PtclAttributeBuffer), 36 * 4);
     VertexBuffer::BindExtBuffer(shader->mEmtMatAttr2,    4, sizeof(PtclAttributeBuffer), 40 * 4);
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 #if EFT_IS_CAFE
     VertexBuffer::BindExtBuffer(5, sizeof(PtclAttributeBuffer) * entryNum, 0, sizeof(PtclAttributeBuffer), ptclAttributeBuffer);
 #endif // EFT_IS_CAFE

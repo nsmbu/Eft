@@ -63,7 +63,7 @@ Renderer::Renderer(Heap* heap, System* system, const Config& config)
     pos[1].x = -particleWH;
     pos[1].y = -particleWH;
     pos[1].z =  0.0f;
-#if EFT_IS_WIN
+#if EFT_IS_PC
     pos[2].x =  particleWH;
     pos[2].y =  particleWH;
     pos[2].z =  0.0f;
@@ -83,7 +83,7 @@ Renderer::Renderer(Heap* heap, System* system, const Config& config)
     u32* index = static_cast<u32*>(mIndexVB.AllocateVertexBuffer(mHeap, sizeof(u32) * 4, 1));
     index[0] = 0;
     index[1] = 1;
-#if EFT_IS_WIN
+#if EFT_IS_PC
     index[2] = 3;
     index[3] = 2;
 #else
@@ -181,7 +181,7 @@ bool Renderer::SetupParticleShaderAndVertex(ParticleShader* shader, MeshType mes
         if (shader->GetIndexAttribute() != EFT_INVALID_ATTRIBUTE)
             mIndexVB.BindBuffer(shader->GetIndexAttribute(), sizeof(u32) * 4, sizeof(u32));
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
         mDrawPrimitiveType = Draw::PRIM_TYPE_TRIANGLE_STRIP;
 #else
         mDrawPrimitiveType = Draw::PRIM_TYPE_QUADS;
@@ -286,7 +286,7 @@ void Renderer::RequestParticle(const EmitterInstance* emitter, ParticleShader* s
         mSystem->GetUserShaderRenderStateSetCallback(shaderCallback)(arg);
     }
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     GLuint gl_vbo;
     glGenBuffers(1, &gl_vbo);
 #endif
@@ -317,7 +317,7 @@ void Renderer::RequestParticle(const EmitterInstance* emitter, ParticleShader* s
 
             for (u32 i = 0; i < cnt; i++)
             {
-#if EFT_IS_WIN
+#if EFT_IS_PC
                 glBindBuffer(GL_ARRAY_BUFFER, gl_vbo);
                 glBufferData(GL_ARRAY_BUFFER, sizeof(PtclAttributeBuffer), &ptclAttributeBuffer[sortPtcls[i].index], GL_STATIC_DRAW);
 #endif
@@ -331,7 +331,7 @@ void Renderer::RequestParticle(const EmitterInstance* emitter, ParticleShader* s
                     Draw::DrawInstancePrimitive(mDrawPrimitiveType, 4, 1);
             }
         }
-#if EFT_IS_WIN
+#if EFT_IS_PC
         glDeleteBuffers(1, &gl_vbo);
 #endif
         return;
@@ -343,7 +343,7 @@ void Renderer::RequestParticle(const EmitterInstance* emitter, ParticleShader* s
     {
         entryNum = emitter->childEntryNum;
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
         glBindBuffer(GL_ARRAY_BUFFER, gl_vbo);
         glBufferData(GL_ARRAY_BUFFER, entryNum * sizeof(PtclAttributeBuffer), emitter->childPtclAttributeBuffer, GL_STATIC_DRAW);
 #endif
@@ -354,7 +354,7 @@ void Renderer::RequestParticle(const EmitterInstance* emitter, ParticleShader* s
     {
         entryNum = emitter->entryNum;
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
         glBindBuffer(GL_ARRAY_BUFFER, gl_vbo);
         glBufferData(GL_ARRAY_BUFFER, entryNum * sizeof(PtclAttributeBuffer), emitter->ptclAttributeBuffer, GL_STATIC_DRAW);
 #endif
@@ -368,7 +368,7 @@ void Renderer::RequestParticle(const EmitterInstance* emitter, ParticleShader* s
     else
         Draw::DrawInstancePrimitive(mDrawPrimitiveType, 4, entryNum);
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     glDeleteBuffers(1, &gl_vbo);
 #endif
 }

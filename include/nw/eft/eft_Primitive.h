@@ -2,9 +2,9 @@
 #define EFT_PRIMITIVE_H_
 
 #include <nw/eft/eft_typeDef.h>
-#if EFT_IS_WIN
+#if EFT_IS_PC
 #include <nw/eft/gl/eft_GLWrapper.h>
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 #if EFT_IS_CAFE
 #include <nw/eft/cafe/eft_CafeWrapper.h>
 #endif // EFT_IS_CAFE
@@ -72,7 +72,7 @@ public:
                 col->w = 1.0f;
                 col++;
             }
-#if (!EFT_IS_WIN)
+#if (!EFT_IS_PC)
             mPrimitiveColorVB.Invalidate();
 #endif
         }

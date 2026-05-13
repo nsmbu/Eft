@@ -4,9 +4,9 @@
 #include <nw/eft/eft_Emitter.h>
 #include <nw/eft/eft_TemporaryBuffer.h>
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
 #include <nw/eft/gl/eft_GLWrapper.h>
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 #if EFT_IS_CAFE
 #include <nw/eft/cafe/eft_CafeWrapper.h>
 #endif // EFT_IS_CAFE

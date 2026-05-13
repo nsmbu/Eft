@@ -24,7 +24,7 @@ Resource::~Resource()
 
 
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
 
 static const GX2SurfaceFormat TextureFormat2GX2Tbl[] = {
     GX2_SURFACE_FORMAT_UNORM_RGBA8,
@@ -95,8 +95,8 @@ void Resource::CreateFtexbTextureHandle(Heap* heap, void* texture_data, TextureR
     surface.swizzle = texRes.swizzle << 8;
     GX2CalcSurfaceSizeAndAlignment(&surface);
 
-    surface.imagePtr = texture_data;
-    surface.mipPtr = (surface.numMips > 1) ? (u8*)texture_data + surface.imageSize : NULL;
+    surface.imagePtr.set(texture_data);
+    surface.mipPtr.set((surface.numMips > 1) ? (u8*)texture_data + surface.imageSize : NULL);
 
     for (s32 i = 0; i < 13; i++)
         surface.mipOffset[i] = texRes.mipOffset[i];
@@ -125,8 +125,8 @@ void Resource::CreateFtexbTextureHandle(Heap* heap, void* texture_data, TextureR
     linear_surface.swizzle = 0;
     GX2CalcSurfaceSizeAndAlignment(&linear_surface);
 
-    linear_surface.imagePtr = heap->Alloc(linear_surface.imageSize);
-    linear_surface.mipPtr = NULL;
+    linear_surface.imagePtr.set(heap->Alloc(linear_surface.imageSize));
+    linear_surface.mipPtr.set(NULL);
 
     GX2CopySurface(&surface, 0, 0, &linear_surface, 0, 0);
 
@@ -137,13 +137,13 @@ void Resource::CreateFtexbTextureHandle(Heap* heap, void* texture_data, TextureR
         glFormat = &TextureFormat2GLTbl[texRes.nativeDataFormat];
 
     if (EFT_TEXTURE_FORMAT_UNORM_BC1 <= texRes.nativeDataFormat && texRes.nativeDataFormat <= EFT_TEXTURE_FORMAT_SRGB_BC3)
-        glCompressedTexImage2DARB(GL_TEXTURE_2D, 0, glFormat->internalformat, texRes.width, texRes.height, 0, linear_surface.imageSize, linear_surface.imagePtr);
+        glCompressedTexImage2D(GL_TEXTURE_2D, 0, glFormat->internalformat, texRes.width, texRes.height, 0, linear_surface.imageSize, linear_surface.imagePtr.get());
 
     else if (EFT_TEXTURE_FORMAT_UNORM_BC4 <= texRes.nativeDataFormat && texRes.nativeDataFormat <= EFT_TEXTURE_FORMAT_SNORM_BC5)
-        glCompressedTexImage2D(GL_TEXTURE_2D, 0, glFormat->internalformat, texRes.width, texRes.height, 0, linear_surface.imageSize, linear_surface.imagePtr);
+        glCompressedTexImage2D(GL_TEXTURE_2D, 0, glFormat->internalformat, texRes.width, texRes.height, 0, linear_surface.imageSize, linear_surface.imagePtr.get());
 
     else
-        glTexImage2D(GL_TEXTURE_2D, 0, glFormat->internalformat, texRes.width, texRes.height, 0, glFormat->format, glFormat->type, linear_surface.imagePtr);
+        glTexImage2D(GL_TEXTURE_2D, 0, glFormat->internalformat, texRes.width, texRes.height, 0, glFormat->format, glFormat->type, linear_surface.imagePtr.get());
 }
 
 void Resource::CreateOriginalTextureHandle(Heap* heap, void* texture_data, TextureRes& texRes)
@@ -161,15 +161,15 @@ void Resource::CreateOriginalTextureHandle(Heap* heap, void* texture_data, Textu
     linear_surface.swizzle = 0;
     GX2CalcSurfaceSizeAndAlignment(&linear_surface);
 
-    linear_surface.imagePtr = heap->Alloc(linear_surface.imageSize);
-    linear_surface.mipPtr = NULL;
+    linear_surface.imagePtr.set(heap->Alloc(linear_surface.imageSize));
+    linear_surface.mipPtr.set(NULL);
 
     if (texRes.originalDataFormat == EFT_TEXTURE_FORMAT_32BIT_COLOR)
-        std::memcpy(linear_surface.imagePtr, texture_data, linear_surface.imageSize);
+        std::memcpy(linear_surface.imagePtr.get(), texture_data, linear_surface.imageSize);
 
     else
     {
-        u8* const texAddr = (u8*)linear_surface.imagePtr;
+        u8* const texAddr = (u8*)linear_surface.imagePtr.get();
 
         for (u32 i = 0; i < texRes.width * texRes.height; i++)
         {
@@ -192,10 +192,10 @@ void Resource::CreateOriginalTextureHandle(Heap* heap, void* texture_data, Textu
     glTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, compSel);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texRes.width, texRes.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, linear_surface.imagePtr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, texRes.width, texRes.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, linear_surface.imagePtr.get());
 }
 
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
 #if EFT_IS_CAFE
 
@@ -480,12 +480,12 @@ void Resource::Initialize(Heap* heap, void* bin, s32 resourceID, System* ptclSys
 
 void Resource::DeleteTextureHandle(Heap* heap, TextureRes& texRes, bool isOriginalTexture)
 {
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (heap != NULL)
-        heap->Free(texRes.gx2Texture.surface.imagePtr);
+        heap->Free(texRes.gx2Texture.surface.imagePtr.get());
 
     glDeleteTextures(1, &texRes.handle);
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
 #if EFT_IS_CAFE
     if (heap != NULL && isOriginalTexture)

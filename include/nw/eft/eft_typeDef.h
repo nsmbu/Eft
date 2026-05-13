@@ -3,21 +3,21 @@
 
 #include <nw/types.h>
 
-#ifdef _WIN32
-    #include <GL/glew.h>
-#endif // _WIN32
+#if defined(NW_PLATFORM_LINUX) || defined(NW_PLATFORM_MACOSX) || defined(NW_PLATFORM_WIN32)
+    #include <glad/glad.h>
+#endif
 
 #include <cafe.h>
 #include <cafe/gfd.h>
 
-#ifdef _WIN32
-    #define EFT_IS_WIN                  1
+#if defined(NW_PLATFORM_LINUX) || defined(NW_PLATFORM_MACOSX) || defined(NW_PLATFORM_WIN32)
+    #define EFT_IS_PC                   1
     #define EFT_IS_CAFE                 0
     #define EFT_IS_CAFE_WUT             0
 
     #define EFT_MEMUTIL_CAFE_DCBZ_OFFSET(addr, offset)	((void)offset)
 #else
-    #define EFT_IS_WIN                  0
+    #define EFT_IS_PC                   0
     #define EFT_IS_CAFE                 1
 
     #ifdef __WUT__
@@ -29,11 +29,11 @@
     #define EFT_MEMUTIL_CAFE_DCBZ_OFFSET(addr, offset)	asm("	dcbz	%0,%1" : "+g"(addr), "+g"(offset) )
 #endif
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     #if (__BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__)
-        #error "Windows host expected to be little-endian"
+        #error "PC host expected to be little-endian"
     #endif
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 
 #if (defined(__cplusplus) && __cplusplus < 201103L) || (!defined(__cplusplus) && (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 201112L))
     #ifndef static_assert

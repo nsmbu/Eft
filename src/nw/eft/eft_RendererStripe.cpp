@@ -1190,7 +1190,7 @@ void Renderer::EntryConnectionStripe(EmitterInstance* emitter, bool cacheFlush, 
     if (!SetupStripeDrawSetting(emitter, cacheFlush, userParam))
         return;
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     GLuint gl_vbo;
     glGenBuffers(1, &gl_vbo);
 
@@ -1201,7 +1201,7 @@ void Renderer::EntryConnectionStripe(EmitterInstance* emitter, bool cacheFlush, 
     VertexBuffer::BindExtBuffer(stripeShader->GetOuterAttribute(),        4, sizeof(StripeVertexBuffer),  4 * 4);
     VertexBuffer::BindExtBuffer(stripeShader->GetTextureCoordAttribute(), 4, sizeof(StripeVertexBuffer),  8 * 4);
     VertexBuffer::BindExtBuffer(stripeShader->GetDirAttribute(),          4, sizeof(StripeVertexBuffer), 12 * 4);
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 #if EFT_IS_CAFE
     VertexBuffer::BindExtBuffer(0, sizeof(StripeVertexBuffer) * emitter->stripeVertexNum, 0, sizeof(StripeVertexBuffer), stripeVertex);
 #endif // EFT_IS_CAFE
@@ -1227,7 +1227,7 @@ void Renderer::EntryConnectionStripe(EmitterInstance* emitter, bool cacheFlush, 
     StripeUniformBlock* uniformBlock = static_cast<StripeUniformBlock*>(AllocFromDoubleBuffer(sizeof(StripeUniformBlock)));
     if (uniformBlock == NULL)
     {
-#if EFT_IS_WIN
+#if EFT_IS_PC
         glDeleteBuffers(1, &gl_vbo);
 #endif
         return;
@@ -1272,7 +1272,7 @@ void Renderer::EntryConnectionStripe(EmitterInstance* emitter, bool cacheFlush, 
         StripeUniformBlock* uniformBlock = static_cast<StripeUniformBlock*>(AllocFromDoubleBuffer(sizeof(StripeUniformBlock)));
         if (uniformBlock == NULL)
         {
-#if EFT_IS_WIN
+#if EFT_IS_PC
             glDeleteBuffers(1, &gl_vbo);
 #endif
             return;
@@ -1313,7 +1313,7 @@ void Renderer::EntryConnectionStripe(EmitterInstance* emitter, bool cacheFlush, 
         Draw::DrawPrimitive(Draw::PRIM_TYPE_TRIANGLE_STRIP, 0, numDrawVertex);
     }
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     glDeleteBuffers(1, &gl_vbo);
 #endif
 }
@@ -1339,7 +1339,7 @@ void Renderer::EntryStripe(EmitterInstance* emitter, bool cacheFlush, void* user
     if (!SetupStripeDrawSetting(emitter, cacheFlush, userParam))
         return;
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     GLuint gl_vbo;
     glGenBuffers(1, &gl_vbo);
 
@@ -1350,7 +1350,7 @@ void Renderer::EntryStripe(EmitterInstance* emitter, bool cacheFlush, void* user
     VertexBuffer::BindExtBuffer(stripeShader->GetOuterAttribute(),        4, sizeof(StripeVertexBuffer),  4 * 4);
     VertexBuffer::BindExtBuffer(stripeShader->GetTextureCoordAttribute(), 4, sizeof(StripeVertexBuffer),  8 * 4);
     VertexBuffer::BindExtBuffer(stripeShader->GetDirAttribute(),          4, sizeof(StripeVertexBuffer), 12 * 4);
-#endif // EFT_IS_WIN
+#endif // EFT_IS_PC
 #if EFT_IS_CAFE
     VertexBuffer::BindExtBuffer(0, sizeof(StripeVertexBuffer) * emitter->stripeVertexNum, 0, sizeof(StripeVertexBuffer), stripeVertex);
 #endif // EFT_IS_CAFE
@@ -1473,7 +1473,7 @@ void Renderer::EntryStripe(EmitterInstance* emitter, bool cacheFlush, void* user
         }
     }
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
     glDeleteBuffers(1, &gl_vbo);
 #endif
 }

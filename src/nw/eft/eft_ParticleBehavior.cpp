@@ -13,8 +13,8 @@ namespace nw { namespace eft {
 
 static inline void _calcTexPatAnim(PtclInstance* ptcl, const TextureEmitterData* textureData)
 {
-    register s32 cnt = (s32)ptcl->cnt;
-    register u32 patIx;
+    s32 cnt = (s32)ptcl->cnt;
+    u32 patIx;
 
     // Four animation types:
     // 1. Fit to lifespan
@@ -55,8 +55,8 @@ static inline void _calcTexPatAnim(PtclInstance* ptcl, const TextureEmitterData*
 
 static inline void _calcSubTexPatAnim(PtclInstance* ptcl, const TextureEmitterData* textureData)
 {
-    register s32 cnt = (s32)ptcl->cnt;
-    register u32 patIx;
+    s32 cnt = (s32)ptcl->cnt;
+    u32 patIx;
 
     // Four animation types:
     // 1. Fit to lifespan
@@ -97,8 +97,8 @@ static inline void _calcSubTexPatAnim(PtclInstance* ptcl, const TextureEmitterDa
 
 static inline void _calcChildTexPatAnim(const ComplexEmitterData* __restrict res, const ChildData* __restrict cres, PtclInstance* __restrict ptcl)
 {
-    register s32 cnt = (s32)ptcl->cnt;
-    register u32 patIx;
+    s32 cnt = (s32)ptcl->cnt;
+    u32 patIx;
 
     // Four animation types:
     // 1. Fit to lifespan
@@ -161,9 +161,9 @@ static inline void _interpolate3Colors(const SimpleEmitterData* __restrict res, 
         {
             f32 t = (f32)(localCnt - sec1) / (f32)(sec2 - sec1);
 
-            register f32 val1 = res->color[kind][1].r - res->color[kind][0].r;
-            register f32 val2 = res->color[kind][1].g - res->color[kind][0].g;
-            register f32 val3 = res->color[kind][1].b - res->color[kind][0].b;
+            f32 val1 = res->color[kind][1].r - res->color[kind][0].r;
+            f32 val2 = res->color[kind][1].g - res->color[kind][0].g;
+            f32 val3 = res->color[kind][1].b - res->color[kind][0].b;
 
             ptcl->color[kind].r = res->color[kind][0].r + val1 * t;
             ptcl->color[kind].g = res->color[kind][0].g + val2 * t;
@@ -176,9 +176,9 @@ static inline void _interpolate3Colors(const SimpleEmitterData* __restrict res, 
             {
                 f32 t = (f32)(localCnt - sec2) / (f32)(sec3 - sec2);
 
-                register f32 val1 = res->color[kind][2].r - res->color[kind][1].r;
-                register f32 val2 = res->color[kind][2].g - res->color[kind][1].g;
-                register f32 val3 = res->color[kind][2].b - res->color[kind][1].b;
+                f32 val1 = res->color[kind][2].r - res->color[kind][1].r;
+                f32 val2 = res->color[kind][2].g - res->color[kind][1].g;
+                f32 val3 = res->color[kind][2].b - res->color[kind][1].b;
 
                 ptcl->color[kind].r = res->color[kind][1].r + val1 * t;
                 ptcl->color[kind].g = res->color[kind][1].g + val2 * t;
@@ -198,7 +198,7 @@ u32 EmitterCalc::CalcSimpleParticleBehavior(EmitterInstance* __restrict e, PtclI
 {
     const SimpleEmitterData* __restrict res = e->res;
 
-    register s32 cnt = (s32)ptcl->cnt;
+    s32 cnt = (s32)ptcl->cnt;
 
     nw::math::MTX34* mrt  = ptcl->coordinateEmitterRT;
     nw::math::MTX34* msrt = ptcl->coordinateEmitterSRT;
@@ -364,7 +364,7 @@ u32 EmitterCalc::CalcComplexParticleBehavior(EmitterInstance* __restrict e, Ptcl
 {
     const ComplexEmitterData* __restrict res = static_cast<const ComplexEmitterData*>(e->res);
 
-    register s32 cnt = (s32)ptcl->cnt;
+    s32 cnt = (s32)ptcl->cnt;
 
     nw::math::MTX34* mrt  = ptcl->coordinateEmitterRT;
     nw::math::MTX34* msrt = ptcl->coordinateEmitterSRT;
@@ -534,7 +534,7 @@ u32 EmitterCalc::CalcChildParticleBehavior(EmitterInstance* __restrict e, PtclIn
     const ComplexEmitterData* __restrict res  = static_cast<const ComplexEmitterData*>(ptcl->res);
     const ChildData*          __restrict cres = reinterpret_cast<const ChildData*>(res + 1);
 
-    register s32 cnt = (s32)ptcl->cnt;
+    s32 cnt = (s32)ptcl->cnt;
 
     nw::math::MTX34* mrt  = ptcl->coordinateEmitterRT;
     nw::math::MTX34* msrt = ptcl->coordinateEmitterSRT;
@@ -657,7 +657,7 @@ void EmitterCalc::MakeParticleAttributeBuffer(PtclAttributeBuffer* __restrict at
     PtclAttributeBuffer*    dst     = attrBuffer;
     PtclInstance*           src     = ptcl;
 
-    register u32 attrFlag = shaderAttrFlag;
+    u32 attrFlag = shaderAttrFlag;
 
     const EmitterSet* set = src->emitter->emitterSet;
 

@@ -1,7 +1,7 @@
 #include <nw/eft/gl/eft_GLWrapper.h>
 #include <nw/eft/eft_Heap.h>
 
-#if EFT_IS_WIN
+#if EFT_IS_PC
 
 #include <algorithm>
 #include <cassert>
@@ -9,9 +9,35 @@
 #include <cstring>
 #include <sstream>
 
-#include <file.hpp>
-#include <globals.hpp>
-#include <md5.hpp>
+#include "file.hpp"
+#include "md5.hpp"
+
+#pragma once
+
+#include <string>
+#include <unordered_map>
+
+const std::string g_CWD = std::filesystem::current_path().generic_string();
+const std::string g_CafePath = g_CWD + "/Cafe";
+const std::string g_CafeCachePath = g_CafePath + "/Cache";
+
+struct ShaderCache
+{
+    ShaderCache(const std::string& v, const std::string& f)
+        : vertexShader(v)
+        , fragmentShader(f)
+    {
+    }
+
+    ~ShaderCache() = default;
+
+    std::string vertexShader;
+    std::string fragmentShader;
+};
+
+typedef std::unordered_map<std::string, const ShaderCache> ShaderCacheMap;
+
+ShaderCacheMap g_ShaderCache;
 
 static GLuint CompileShader(const char* source, GLenum type)
 {
@@ -106,28 +132,28 @@ static size_t SaveGX2VertexShader(nw::eft::Heap* heap,
 
     for (u32 i = 0; i < shader->numUniformBlocks; i++)
     {
-        const char* const name = shader->uniformBlocks[i].name;
+        const char* const name = shader->uniformBlocks.getIndexed(i)->name.get();
         if (name != NULL)
             shaderBufSize += std::strlen(name) + 1;
     }
 
     for (u32 i = 0; i < shader->numUniforms; i++)
     {
-        const char* const name = shader->uniformVars[i].name;
+        const char* const name = shader->uniformVars.getIndexed(i)->name.get();
         if (name != NULL)
             shaderBufSize += std::strlen(name) + 1;
     }
 
     for (u32 i = 0; i < shader->numSamplers; i++)
     {
-        const char* const name = shader->samplerVars[i].name;
+        const char* const name = shader->samplerVars.getIndexed(i)->name.get();
         if (name != NULL)
             shaderBufSize += std::strlen(name) + 1;
     }
 
     for (u32 i = 0; i < shader->numAttribs; i++)
     {
-        const char* const name = shader->attribVars[i].name;
+        const char* const name = shader->attribVars.getIndexed(i)->name.get();
         if (name != NULL)
             shaderBufSize += std::strlen(name) + 1;
     }
@@ -138,14 +164,14 @@ static size_t SaveGX2VertexShader(nw::eft::Heap* heap,
     u8* shaderBuf = (u8*)heap->Alloc(shaderBufSize);
 
     std::memcpy(shaderBuf, shader, sizeof(GX2VertexShader));
-    std::memcpy(shaderBuf + shaderDataOffs, shader->shaderPtr, shader->shaderSize);
+    std::memcpy(shaderBuf + shaderDataOffs, shader->shaderPtr.get(), shader->shaderSize);
 
     *(u32*)(shaderBuf + offsetof(GX2VertexShader, shaderPtr)) = shaderDataOffs;
 
     if (shader->numUniformBlocks != 0)
     {
         std::memcpy(shaderBuf + uniformBlocksOffs,
-                    shader->uniformBlocks,
+                    shader->uniformBlocks.get(),
                     shader->numUniformBlocks * sizeof(GX2UniformBlock));
 
         *(u32*)(shaderBuf + offsetof(GX2VertexShader, uniformBlocks)) = uniformBlocksOffs;
@@ -154,7 +180,7 @@ static size_t SaveGX2VertexShader(nw::eft::Heap* heap,
     if (shader->numUniforms != 0)
     {
         std::memcpy(shaderBuf + uniformVarsOffs,
-                    shader->uniformVars,
+                    shader->uniformVars.get(),
                     shader->numUniforms * sizeof(GX2UniformVar));
 
         *(u32*)(shaderBuf + offsetof(GX2VertexShader, uniformVars)) = uniformVarsOffs;
@@ -163,7 +189,7 @@ static size_t SaveGX2VertexShader(nw::eft::Heap* heap,
     if (shader->numInitialValues != 0)
     {
         std::memcpy(shaderBuf + initialValuesOffs,
-                    shader->initialValues,
+                    shader->initialValues.get(),
                     shader->numInitialValues * sizeof(GX2UniformInitialValue));
 
         *(u32*)(shaderBuf + offsetof(GX2VertexShader, initialValues)) = initialValuesOffs;
@@ -172,7 +198,7 @@ static size_t SaveGX2VertexShader(nw::eft::Heap* heap,
     if (shader->_numLoops != 0)
     {
         std::memcpy(shaderBuf + loopVarsOffs,
-                    shader->_loopVars,
+                    shader->_loopVars.get(),
                     shader->_numLoops * sizeof(u32) * 2);
 
         *(u32*)(shaderBuf + offsetof(GX2VertexShader, _loopVars)) = loopVarsOffs;
@@ -181,7 +207,7 @@ static size_t SaveGX2VertexShader(nw::eft::Heap* heap,
     if (shader->numSamplers != 0)
     {
         std::memcpy(shaderBuf + samplerVarsOffs,
-                    shader->samplerVars,
+                    shader->samplerVars.get(),
                     shader->numSamplers * sizeof(GX2SamplerVar));
 
         *(u32*)(shaderBuf + offsetof(GX2VertexShader, samplerVars)) = samplerVarsOffs;
@@ -190,7 +216,7 @@ static size_t SaveGX2VertexShader(nw::eft::Heap* heap,
     if (shader->numAttribs != 0)
     {
         std::memcpy(shaderBuf + attribVarsOffs,
-                    shader->attribVars,
+                    shader->attribVars.get(),
                     shader->numAttribs * sizeof(GX2AttribVar));
 
         *(u32*)(shaderBuf + offsetof(GX2VertexShader, attribVars)) = attribVarsOffs;
@@ -200,7 +226,7 @@ static size_t SaveGX2VertexShader(nw::eft::Heap* heap,
 
     for (u32 i = 0; i < shader->numUniformBlocks; i++)
     {
-        const char* const name = shader->uniformBlocks[i].name;
+        const char* const name = shader->uniformBlocks.getIndexed(i)->name.get();
         if (name != NULL)
         {
             const size_t nameLen = std::strlen(name) + 1;
@@ -217,7 +243,7 @@ static size_t SaveGX2VertexShader(nw::eft::Heap* heap,
 
     for (u32 i = 0; i < shader->numUniforms; i++)
     {
-        const char* const name = shader->uniformVars[i].name;
+        const char* const name = shader->uniformVars.getIndexed(i)->name.get();
         if (name != NULL)
         {
             const size_t nameLen = std::strlen(name) + 1;
@@ -234,7 +260,7 @@ static size_t SaveGX2VertexShader(nw::eft::Heap* heap,
 
     for (u32 i = 0; i < shader->numSamplers; i++)
     {
-        const char* const name = shader->samplerVars[i].name;
+        const char* const name = shader->samplerVars.getIndexed(i)->name.get();
         if (name != NULL)
         {
             const size_t nameLen = std::strlen(name) + 1;
@@ -251,7 +277,7 @@ static size_t SaveGX2VertexShader(nw::eft::Heap* heap,
 
     for (u32 i = 0; i < shader->numAttribs; i++)
     {
-        const char* const name = shader->attribVars[i].name;
+        const char* const name = shader->attribVars.getIndexed(i)->name.get();
         if (name != NULL)
         {
             const size_t nameLen = std::strlen(name) + 1;
@@ -295,21 +321,21 @@ static size_t SaveGX2PixelShader(nw::eft::Heap* heap,
 
     for (u32 i = 0; i < shader->numUniformBlocks; i++)
     {
-        const char* const name = shader->uniformBlocks[i].name;
+        const char* const name = shader->uniformBlocks.getIndexed(i)->name.get();
         if (name != NULL)
             shaderBufSize += std::strlen(name) + 1;
     }
 
     for (u32 i = 0; i < shader->numUniforms; i++)
     {
-        const char* const name = shader->uniformVars[i].name;
+        const char* const name = shader->uniformVars.getIndexed(i)->name.get();
         if (name != NULL)
             shaderBufSize += std::strlen(name) + 1;
     }
 
     for (u32 i = 0; i < shader->numSamplers; i++)
     {
-        const char* const name = shader->samplerVars[i].name;
+        const char* const name = shader->samplerVars.getIndexed(i)->name.get();
         if (name != NULL)
             shaderBufSize += std::strlen(name) + 1;
     }
@@ -320,14 +346,14 @@ static size_t SaveGX2PixelShader(nw::eft::Heap* heap,
     u8* shaderBuf = (u8*)heap->Alloc(shaderBufSize);
 
     std::memcpy(shaderBuf, shader, sizeof(GX2PixelShader));
-    std::memcpy(shaderBuf + shaderDataOffs, shader->shaderPtr, shader->shaderSize);
+    std::memcpy(shaderBuf + shaderDataOffs, shader->shaderPtr.get(), shader->shaderSize);
 
     *(u32*)(shaderBuf + offsetof(GX2PixelShader, shaderPtr)) = shaderDataOffs;
 
     if (shader->numUniformBlocks != 0)
     {
         std::memcpy(shaderBuf + uniformBlocksOffs,
-                    shader->uniformBlocks,
+                    shader->uniformBlocks.get(),
                     shader->numUniformBlocks * sizeof(GX2UniformBlock));
 
         *(u32*)(shaderBuf + offsetof(GX2PixelShader, uniformBlocks)) = uniformBlocksOffs;
@@ -336,7 +362,7 @@ static size_t SaveGX2PixelShader(nw::eft::Heap* heap,
     if (shader->numUniforms != 0)
     {
         std::memcpy(shaderBuf + uniformVarsOffs,
-                    shader->uniformVars,
+                    shader->uniformVars.get(),
                     shader->numUniforms * sizeof(GX2UniformVar));
 
         *(u32*)(shaderBuf + offsetof(GX2PixelShader, uniformVars)) = uniformVarsOffs;
@@ -345,7 +371,7 @@ static size_t SaveGX2PixelShader(nw::eft::Heap* heap,
     if (shader->numInitialValues != 0)
     {
         std::memcpy(shaderBuf + initialValuesOffs,
-                    shader->initialValues,
+                    shader->initialValues.get(),
                     shader->numInitialValues * sizeof(GX2UniformInitialValue));
 
         *(u32*)(shaderBuf + offsetof(GX2PixelShader, initialValues)) = initialValuesOffs;
@@ -354,7 +380,7 @@ static size_t SaveGX2PixelShader(nw::eft::Heap* heap,
     if (shader->_numLoops != 0)
     {
         std::memcpy(shaderBuf + loopVarsOffs,
-                    shader->_loopVars,
+                    shader->_loopVars.get(),
                     shader->_numLoops * sizeof(u32) * 2);
 
         *(u32*)(shaderBuf + offsetof(GX2PixelShader, _loopVars)) = loopVarsOffs;
@@ -363,7 +389,7 @@ static size_t SaveGX2PixelShader(nw::eft::Heap* heap,
     if (shader->numSamplers != 0)
     {
         std::memcpy(shaderBuf + samplerVarsOffs,
-                    shader->samplerVars,
+                    shader->samplerVars.get(),
                     shader->numSamplers * sizeof(GX2SamplerVar));
 
         *(u32*)(shaderBuf + offsetof(GX2PixelShader, samplerVars)) = samplerVarsOffs;
@@ -373,7 +399,7 @@ static size_t SaveGX2PixelShader(nw::eft::Heap* heap,
 
     for (u32 i = 0; i < shader->numUniformBlocks; i++)
     {
-        const char* const name = shader->uniformBlocks[i].name;
+        const char* const name = shader->uniformBlocks.getIndexed(i)->name.get();
         if (name != NULL)
         {
             const size_t nameLen = std::strlen(name) + 1;
@@ -390,7 +416,7 @@ static size_t SaveGX2PixelShader(nw::eft::Heap* heap,
 
     for (u32 i = 0; i < shader->numUniforms; i++)
     {
-        const char* const name = shader->uniformVars[i].name;
+        const char* const name = shader->uniformVars.getIndexed(i)->name.get();
         if (name != NULL)
         {
             const size_t nameLen = std::strlen(name) + 1;
@@ -407,7 +433,7 @@ static size_t SaveGX2PixelShader(nw::eft::Heap* heap,
 
     for (u32 i = 0; i < shader->numSamplers; i++)
     {
-        const char* const name = shader->samplerVars[i].name;
+        const char* const name = shader->samplerVars.getIndexed(i)->name.get();
         if (name != NULL)
         {
             const size_t nameLen = std::strlen(name) + 1;
@@ -505,7 +531,7 @@ static void DecompileProgram(nw::eft::Heap* heap,
             }
 
             printf("%s\n", cmd.c_str());
-            RunCommand(cmd.c_str());
+            system(cmd.c_str());
 
             assert(FileExists(vertexShaderSpirvPath.c_str()));
             assert(FileExists(fragmentShaderSpirvPath.c_str()));
@@ -522,7 +548,7 @@ static void DecompileProgram(nw::eft::Heap* heap,
             }
 
             printf("%s\n", cmd.c_str());
-            RunCommand(cmd.c_str());
+            system(cmd.c_str());
 
             assert(FileExists(vertexShaderSrcPath.c_str()));
 
@@ -535,7 +561,7 @@ static void DecompileProgram(nw::eft::Heap* heap,
             }
 
             printf("%s\n", cmd.c_str());
-            RunCommand(cmd.c_str());
+            system(cmd.c_str());
 
             assert(FileExists(fragmentShaderSrcPath.c_str()));
 
@@ -548,8 +574,8 @@ static void DecompileProgram(nw::eft::Heap* heap,
             ReplaceString(glVertexShader, "\r\n", "\n");
             ReplaceString(glFragmentShader, "\r\n", "\n");
 
-            std::vector<GX2UniformBlock> vertexUBOs = std::vector<GX2UniformBlock>(vertexShader->uniformBlocks,
-                                                                                   vertexShader->uniformBlocks + vertexShader->numUniformBlocks);
+            std::vector<GX2UniformBlock> vertexUBOs = std::vector<GX2UniformBlock>(vertexShader->uniformBlocks.get(),
+                                                                                   vertexShader->uniformBlocks.get() + vertexShader->numUniformBlocks);
 
             std::sort(vertexUBOs.begin(), vertexUBOs.end(), GX2UniformBlockComp);
 
@@ -562,7 +588,7 @@ static void DecompileProgram(nw::eft::Heap* heap,
                               << "}";
 
                 std::ostringstream formatNewStrm;
-                formatNewStrm << "layout(std140) uniform " << vertexUBOs[i].name << std::endl
+                formatNewStrm << "layout(std140) uniform " << vertexUBOs[i].name.get() << std::endl
                               << "{" << std::endl
                               << "    vec4 values[" << ((vertexUBOs[i].size + 15) / 16) << "];" << std::endl
                               << "}";
@@ -570,8 +596,8 @@ static void DecompileProgram(nw::eft::Heap* heap,
                 ReplaceString(glVertexShader, formatOldStrm.str(), formatNewStrm.str());
             }
 
-            std::vector<GX2UniformBlock> pixelUBOs = std::vector<GX2UniformBlock>(pixelShader->uniformBlocks,
-                                                                                  pixelShader->uniformBlocks + pixelShader->numUniformBlocks);
+            std::vector<GX2UniformBlock> pixelUBOs = std::vector<GX2UniformBlock>(pixelShader->uniformBlocks.get(),
+                                                                                  pixelShader->uniformBlocks.get() + pixelShader->numUniformBlocks);
 
             std::sort(pixelUBOs.begin(), pixelUBOs.end(), GX2UniformBlockComp);
 
@@ -584,7 +610,7 @@ static void DecompileProgram(nw::eft::Heap* heap,
                               << "}";
 
                 std::ostringstream formatNewStrm;
-                formatNewStrm << "layout(std140) uniform " << pixelUBOs[i].name << std::endl
+                formatNewStrm << "layout(std140) uniform " << pixelUBOs[i].name.get() << std::endl
                               << "{" << std::endl
                               << "    vec4 values[" << ((pixelUBOs[i].size + 15) / 16) << "];" << std::endl
                               << "}";
@@ -987,7 +1013,8 @@ void Shader::BindShader()
 bool Shader::CreateShader(Heap* heap, const void* binary, u32 binarySize)
 {
     mGFDFile = new (heap->Alloc(sizeof(GFDFile))) GFDFile;
-    assert(mGFDFile->load(binary) == binarySize);
+    size_t loadedSize = mGFDFile->load(binary);
+    assert(loadedSize == binarySize);
     //printf("Shader, binary size: %d\n", binarySize);
 
     mpVertexShader      = &mGFDFile->mVertexShaders[0];
@@ -1035,10 +1062,10 @@ u32 Shader::GetFragmentSamplerLocation(const char* name)
 
     for (u32 i = 0; i < mpPixelShader->numSamplers; i++)
     {
-        if (std::strcmp(mpPixelShader->samplerVars[i].name, name) == 0)
+        if (std::strcmp(mpPixelShader->samplerVars.getIndexed(i)->name.get(), name) == 0)
         {
-            assert(mpPixelShader->samplerVars[i].type == 1);
-            u32 location = mpPixelShader->samplerVars[i].location;
+            assert(mpPixelShader->samplerVars.getIndexed(i)->type == 1);
+            u32 location = mpPixelShader->samplerVars.getIndexed(i)->location;
             std::ostringstream samplerNameStrm;
             samplerNameStrm << "SPIRV_Cross_CombinedTEXTURE_" << location << "SAMPLER_" << location;
             return glGetUniformLocation(mProgram, samplerNameStrm.str().c_str());
@@ -1055,7 +1082,7 @@ u32 Shader::GetAttribute(const char* name, u32 index, VertexFormat fmt, u32 offs
 
     for (u32 i = 0; i < mpVertexShader->numAttribs; i++)
     {
-        if (std::strcmp(mpVertexShader->attribVars[i].name, name) == 0)
+        if (std::strcmp(mpVertexShader->attribVars.getIndexed(i)->name.get(), name) == 0)
         {
             std::ostringstream attribNameStrm;
             attribNameStrm << name << "_0_0";
@@ -1083,9 +1110,9 @@ failure:
 
     for (u32 i = 0; i < shader->GetVertexShader()->numUniformBlocks; i++)
     {
-        if (std::strcmp(shader->GetVertexShader()->uniformBlocks[i].name, name) == 0)
+        if (std::strcmp(shader->GetVertexShader()->uniformBlocks.getIndexed(i)->name.get(), name) == 0)
         {
-            mBufferSize = shader->GetVertexShader()->uniformBlocks[i].size;
+            mBufferSize = shader->GetVertexShader()->uniformBlocks.getIndexed(i)->size;
             goto continue_1;
         }
     }
@@ -1121,9 +1148,9 @@ failure:
 
     for (u32 i = 0; i < shader->GetPixelShader()->numUniformBlocks; i++)
     {
-        if (std::strcmp(shader->GetPixelShader()->uniformBlocks[i].name, name) == 0)
+        if (std::strcmp(shader->GetPixelShader()->uniformBlocks.getIndexed(i)->name.get(), name) == 0)
         {
-            mBufferSize = shader->GetPixelShader()->uniformBlocks[i].size;
+            mBufferSize = shader->GetPixelShader()->uniformBlocks.getIndexed(i)->size;
             goto continue_1;
         }
     }

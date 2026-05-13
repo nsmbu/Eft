@@ -301,8 +301,8 @@ void EmitterCalc::EmitCommon(EmitterInstance* __restrict e, PtclInstance* __rest
     const SimpleEmitterData* __restrict res = e->res;
     const EmitterSet*        __restrict set = e->emitterSet;
 
-    register f32 velRand = 1.0f - e->rnd.GetF32() * res->initVelRnd * set->mRandomVel;
-    register f32 dirVel  = e->emitAnimValue[EFT_ANIM_DIR_VEL] * set->mDirectionalVel;
+    f32 velRand = 1.0f - e->rnd.GetF32() * res->initVelRnd * set->mRandomVel;
+    f32 dirVel  = e->emitAnimValue[EFT_ANIM_DIR_VEL] * set->mDirectionalVel;
 
     if (res->initPosRand != 0.0f)
     {
@@ -384,7 +384,7 @@ void EmitterCalc::EmitCommon(EmitterInstance* __restrict e, PtclInstance* __rest
     f32 initScaleX = scaleRnd * set->mEmissionParticleScale.x;
     f32 initScaleY = scaleRnd * set->mEmissionParticleScale.y;
 
-    register s32 maxTime = ptcl->life - 1;
+    s32 maxTime = ptcl->life - 1;
 
     if (maxTime == 0)
     {
@@ -427,12 +427,12 @@ void EmitterCalc::EmitCommon(EmitterInstance* __restrict e, PtclInstance* __rest
 
         ptcl->alpha = res->initAlpha - ptcl->alphaAnim->alphaAddSec1;
 
-        register f32 scaleX = 1.0f;
-        register f32 scaleY = 1.0f;
-        register f32 scaleAddSec1X = 0.0f;
-        register f32 scaleAddSec1Y = 0.0f;
-        register f32 scaleAddSec2X = 0.0f;
-        register f32 scaleAddSec2Y = 0.0f;
+        f32 scaleX = 1.0f;
+        f32 scaleY = 1.0f;
+        f32 scaleAddSec1X = 0.0f;
+        f32 scaleAddSec1Y = 0.0f;
+        f32 scaleAddSec2X = 0.0f;
+        f32 scaleAddSec2Y = 0.0f;
 
         ptcl->scaleAnim->scaleSec1 = 0; // ???
         ptcl->scaleAnim->scaleSec2 = 0; // ^^^
@@ -549,8 +549,8 @@ void EmitterCalc::EmitCommon(EmitterInstance* __restrict e, PtclInstance* __rest
         s32 no_x = no % res->textureData[0].numTexDivX;
         s32 no_y = no / res->textureData[0].numTexDivX;
 
-        register f32 no_x_f = (f32)no_x;
-        register f32 no_y_f = (f32)no_y;
+        f32 no_x_f = (f32)no_x;
+        f32 no_y_f = (f32)no_y;
 
         ptcl->uvOffset.x = res->textureData[0].texUScale * no_x_f;
         ptcl->uvOffset.y = res->textureData[0].texVScale * no_y_f;
@@ -567,8 +567,8 @@ void EmitterCalc::EmitCommon(EmitterInstance* __restrict e, PtclInstance* __rest
         s32 no_x = no % res->textureData[1].numTexDivX;
         s32 no_y = no / res->textureData[1].numTexDivX;
 
-        register f32 no_x_f = (f32)no_x;
-        register f32 no_y_f = (f32)no_y;
+        f32 no_x_f = (f32)no_x;
+        f32 no_y_f = (f32)no_y;
 
         ptcl->uvSubOffset.x = res->textureData[1].texUScale * no_x_f;
         ptcl->uvSubOffset.y = res->textureData[1].texVScale * no_y_f;

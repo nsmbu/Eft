@@ -2486,12 +2486,12 @@ static const f32* gSameDivideSphere64Tbl[63] = {
     f32 emitDelta = e->emitAnimValue[EFT_ANIM_EM_RATE] * e->controller->mEmissionRatio;          \
     e->emitVessel += emitDelta;                                                                  \
     if ((s32)e->cnt == 0 && e->emitVessel < 1.0f && emitDelta != 0.0f) e->emitVessel = 1.0f;     \
-    register s32 emitRate = (s32)nw::math::FFloor(e->emitVessel);                                \
+    s32 emitRate = (s32)nw::math::FFloor(e->emitVessel);                                \
     if (res->emitDistEnabled) emitRate = 1;                                                      \
     e->emitVessel -= (f32)emitRate;                                                              \
     if (emitRate == 0) return NULL;                                                              \
     PtclRandom* rnd = &e->rnd;                                                                   \
-    register f32 figureVel = e->emitAnimValue[EFT_ANIM_ALL_DIR_VEL] * e->emitterSet->mFigureVel;
+    f32 figureVel = e->emitAnimValue[EFT_ANIM_ALL_DIR_VEL] * e->emitterSet->mFigureVel;
 
 #define BEGIN_EMIT_FUNCTION(e)                          \
     PtclInstance* __restrict ptcl = NULL;               \
@@ -2659,8 +2659,8 @@ PtclInstance* EmitterCalc::_emitCircle(EmitterInstance* __restrict e)
 {
     BEGIN_EMIT_FUNCTION_DECL()
 
-    register f32 scaleX = CALC_EMIT_SCALE_X();
-    register f32 scaleZ = CALC_EMIT_SCALE_Z_PLANE();
+    f32 scaleX = CALC_EMIT_SCALE_X();
+    f32 scaleZ = CALC_EMIT_SCALE_Z_PLANE();
 
     CALC_EMIT_ROTATION_BASIC()
 
@@ -2685,15 +2685,15 @@ PtclInstance* EmitterCalc::_emitCircleSameDivide(EmitterInstance* __restrict e)
 {
     BEGIN_EMIT_FUNCTION_DECL()
 
-    register f32 scaleX = CALC_EMIT_SCALE_X();
-    register f32 scaleZ = CALC_EMIT_SCALE_Z_PLANE();
+    f32 scaleX = CALC_EMIT_SCALE_X();
+    f32 scaleZ = CALC_EMIT_SCALE_Z_PLANE();
 
     s32 sweepStart = res->volumeSweepStart;
     if (res->volumeSweepStartRandom)
         sweepStart = rnd->GetU32Direct();
 
-    register u32 rot     = sweepStart;
-    register u32 rotPlus;
+    u32 rot     = sweepStart;
+    u32 rotPlus;
 
     if (emitRate <= 1.0f) // Comparison with 1.0f instead of 1... mistake?
         rotPlus = 0;
@@ -2729,8 +2729,8 @@ PtclInstance* EmitterCalc::_emitFillCircle(EmitterInstance* __restrict e)
 {
     BEGIN_EMIT_FUNCTION_DECL()
 
-    register f32 scaleX = CALC_EMIT_SCALE_X();
-    register f32 scaleZ = CALC_EMIT_SCALE_Z_PLANE();
+    f32 scaleX = CALC_EMIT_SCALE_X();
+    f32 scaleZ = CALC_EMIT_SCALE_Z_PLANE();
 
     CALC_EMIT_ROTATION_BASIC()
 
@@ -2764,9 +2764,9 @@ PtclInstance* EmitterCalc::_emitSphere(EmitterInstance* __restrict e)
 {
     BEGIN_EMIT_FUNCTION_DECL()
 
-    register f32 scaleX = CALC_EMIT_SCALE_X();
-    register f32 scaleY = CALC_EMIT_SCALE_Y();
-    register f32 scaleZ = CALC_EMIT_SCALE_Z();
+    f32 scaleX = CALC_EMIT_SCALE_X();
+    f32 scaleY = CALC_EMIT_SCALE_Y();
+    f32 scaleZ = CALC_EMIT_SCALE_Z();
 
     f32 rotWidth, rotStart;
     _calcVolumeSweepParams(res, rotWidth, rotStart, rnd);
@@ -2806,9 +2806,9 @@ PtclInstance* EmitterCalc::_emitSphereSameDivide(EmitterInstance* __restrict e)
     BEGIN_EMIT_FUNCTION_DECL()
     (void)rnd; // Suppress unused warning
 
-    register f32 scaleX = CALC_EMIT_SCALE_X();
-    register f32 scaleY = CALC_EMIT_SCALE_Y();
-    register f32 scaleZ = CALC_EMIT_SCALE_Z();
+    f32 scaleX = CALC_EMIT_SCALE_X();
+    f32 scaleY = CALC_EMIT_SCALE_Y();
+    f32 scaleZ = CALC_EMIT_SCALE_Z();
 
     const f32* sphere_tbl = gSameDivideSphereTbl[res->volumeTblIndex];
 
@@ -2879,9 +2879,9 @@ PtclInstance* EmitterCalc::_emitFillSphere(EmitterInstance* __restrict e)
 {
     BEGIN_EMIT_FUNCTION_DECL()
 
-    register f32 scaleX = CALC_EMIT_SCALE_X();
-    register f32 scaleY = CALC_EMIT_SCALE_Y();
-    register f32 scaleZ = CALC_EMIT_SCALE_Z();
+    f32 scaleX = CALC_EMIT_SCALE_X();
+    f32 scaleY = CALC_EMIT_SCALE_Y();
+    f32 scaleZ = CALC_EMIT_SCALE_Z();
 
     f32 rotWidth, rotStart;
     _calcVolumeSweepParams(res, rotWidth, rotStart, rnd);
@@ -2924,9 +2924,9 @@ PtclInstance* EmitterCalc::_emitCylinder(EmitterInstance* __restrict e)
 {
     BEGIN_EMIT_FUNCTION_DECL()
 
-    register f32 scaleX = CALC_EMIT_SCALE_X();
-    register f32 scaleY = CALC_EMIT_SCALE_Y();
-    register f32 scaleZ = CALC_EMIT_SCALE_Z();
+    f32 scaleX = CALC_EMIT_SCALE_X();
+    f32 scaleY = CALC_EMIT_SCALE_Y();
+    f32 scaleZ = CALC_EMIT_SCALE_Z();
 
     CALC_EMIT_ROTATION_BASIC()
 
@@ -2953,9 +2953,9 @@ PtclInstance* EmitterCalc::_emitFillCylinder(EmitterInstance* __restrict e)
 {
     BEGIN_EMIT_FUNCTION_DECL()
 
-    register f32 scaleX = CALC_EMIT_SCALE_X();
-    register f32 scaleY = CALC_EMIT_SCALE_Y();
-    register f32 scaleZ = CALC_EMIT_SCALE_Z();
+    f32 scaleX = CALC_EMIT_SCALE_X();
+    f32 scaleY = CALC_EMIT_SCALE_Y();
+    f32 scaleZ = CALC_EMIT_SCALE_Z();
 
     CALC_EMIT_ROTATION_BASIC()
 
@@ -2992,8 +2992,8 @@ PtclInstance* EmitterCalc::_emitBox(EmitterInstance* __restrict e)
 
     BEGIN_EMIT_FUNCTION(e)
 
-        register u32 coord = rnd->GetU32Direct();
-        register u32 sign  = rnd->GetU32Direct();
+        u32 coord = rnd->GetU32Direct();
+        u32 sign  = rnd->GetU32Direct();
 
         nw::math::VEC3 radRnd;
         radRnd.x = /* rnd->GetF32Range(-1.0f, 1.0f) */ rnd->GetF32() * 2.0f - 1.0f;
@@ -3047,9 +3047,9 @@ PtclInstance* EmitterCalc::_emitBox(EmitterInstance* __restrict e)
         }
 
 #if (EFT_IS_CAFE_WUT || !EFT_IS_CAFE) // Fix undefined behavior
-        register nw::math::VEC3 dir = nw::math::VEC3::Zero();
+        nw::math::VEC3 dir = nw::math::VEC3::Zero();
 #else
-        register nw::math::VEC3 dir;
+        nw::math::VEC3 dir;
 #endif
         if (!ptcl->pos.IsZero())
         {
@@ -3069,9 +3069,9 @@ PtclInstance* EmitterCalc::_emitFillBox(EmitterInstance* __restrict e)
 {
     BEGIN_EMIT_FUNCTION_DECL()
 
-    register f32 scaleX = CALC_EMIT_SCALE_X();
-    register f32 scaleY = CALC_EMIT_SCALE_Y();
-    register f32 scaleZ = CALC_EMIT_SCALE_Z();
+    f32 scaleX = CALC_EMIT_SCALE_X();
+    f32 scaleY = CALC_EMIT_SCALE_Y();
+    f32 scaleZ = CALC_EMIT_SCALE_Z();
 
     BEGIN_EMIT_FUNCTION(e)
 
@@ -3130,9 +3130,9 @@ PtclInstance* EmitterCalc::_emitFillBox(EmitterInstance* __restrict e)
         }
 
 #if (EFT_IS_CAFE_WUT || !EFT_IS_CAFE) // Fix undefined behavior
-        register nw::math::VEC3 dir = nw::math::VEC3::Zero();
+        nw::math::VEC3 dir = nw::math::VEC3::Zero();
 #else
-        register nw::math::VEC3 dir;
+        nw::math::VEC3 dir;
 #endif
         if (!ptcl->pos.IsZero())
         {
@@ -3152,8 +3152,8 @@ PtclInstance* EmitterCalc::_emitLine(EmitterInstance* __restrict e)
 {
     BEGIN_EMIT_FUNCTION_DECL()
 
-    register f32 scaleZ = CALC_EMIT_SCALE_Z_LINE();
-    register f32 centerZ = res->lineCenter * scaleZ;
+    f32 scaleZ = CALC_EMIT_SCALE_Z_LINE();
+    f32 centerZ = res->lineCenter * scaleZ;
 
     BEGIN_EMIT_FUNCTION(e)
 
@@ -3175,11 +3175,11 @@ PtclInstance* EmitterCalc::_emitLineSameDivide(EmitterInstance* __restrict e)
     BEGIN_EMIT_FUNCTION_DECL()
     (void)rnd; // Suppress unused warning
 
-    register f32 scaleZ = CALC_EMIT_SCALE_Z_LINE();
-    register f32 centerZ = res->lineCenter * scaleZ;
+    f32 scaleZ = CALC_EMIT_SCALE_Z_LINE();
+    f32 centerZ = res->lineCenter * scaleZ;
 
-    register f32 t      = 0.0f;
-    register f32 t_plus = 1.0f / (f32)emitRate;
+    f32 t      = 0.0f;
+    f32 t_plus = 1.0f / (f32)emitRate;
 
     if (emitRate == 1)
     {
@@ -3213,13 +3213,13 @@ PtclInstance* EmitterCalc::_emitRectangle(EmitterInstance* __restrict e)
 {
     BEGIN_EMIT_FUNCTION_DECL()
 
-    register f32 scaleX = CALC_EMIT_SCALE_X();
-    register f32 scaleZ = CALC_EMIT_SCALE_Z_PLANE();
+    f32 scaleX = CALC_EMIT_SCALE_X();
+    f32 scaleZ = CALC_EMIT_SCALE_Z_PLANE();
 
     BEGIN_EMIT_FUNCTION(e)
 
-        register u32 coord = rnd->GetU32Direct();
-        register u32 sign  = rnd->GetU32Direct();
+        u32 coord = rnd->GetU32Direct();
+        u32 sign  = rnd->GetU32Direct();
 
         f32 x = /* rnd->GetF32Range(-1.0f, 1.0f) */ rnd->GetF32() * 2.0f - 1.0f;
         f32 z = /* rnd->GetF32Range(-1.0f, 1.0f) */ rnd->GetF32() * 2.0f - 1.0f;
@@ -3256,9 +3256,9 @@ PtclInstance* EmitterCalc::_emitRectangle(EmitterInstance* __restrict e)
         }
 
 #if (EFT_IS_CAFE_WUT || !EFT_IS_CAFE) // Fix undefined behavior
-        register nw::math::VEC3 dir = nw::math::VEC3::Zero();
+        nw::math::VEC3 dir = nw::math::VEC3::Zero();
 #else
-        register nw::math::VEC3 dir;
+        nw::math::VEC3 dir;
 #endif
         if (!ptcl->pos.IsZero())
         {

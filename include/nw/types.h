@@ -3,7 +3,11 @@
 
 #include <cstddef>
 
-#if defined(_WIN32)
+#if defined(__linux__)
+    #define NW_PLATFORM_LINUX
+#elif defined(__APPLE__)
+    #define NW_PLATFORM_MACOSX
+#elif defined(_WIN32)
     #define NW_PLATFORM_WIN32
 #elif (defined(__ghs__) || defined(__WUT__))
     #define NW_PLATFORM_CAFE

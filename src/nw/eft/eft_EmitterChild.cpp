@@ -252,8 +252,8 @@ void EmitterComplexCalc::EmitChildParticle(EmitterInstance* e, PtclInstance* p)
                 s32 no_x = no % cres->childNumTexDivX;
                 s32 no_y = no / cres->childNumTexDivX;
 
-                register f32 no_x_f = (f32)no_x;
-                register f32 no_y_f = (f32)no_y;
+                f32 no_x_f = (f32)no_x;
+                f32 no_y_f = (f32)no_y;
 
                 child->uvOffset.x = cres->childTexUScale * no_x_f;
                 child->uvOffset.y = cres->childTexVScale * no_y_f;

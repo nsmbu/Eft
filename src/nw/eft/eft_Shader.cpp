@@ -166,7 +166,7 @@ bool ParticleShader::SetUserVertexUniformBlock(UserUniformBlockID uniformBlockID
 
 void ParticleShader::EnableInstanced()
 {
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (mWldPosAttr != EFT_INVALID_ATTRIBUTE)
         glVertexAttribDivisor(mWldPosAttr, 1);
 
@@ -204,7 +204,7 @@ void ParticleShader::EnableInstanced()
 
 void ParticleShader::DisableInstanced()
 {
-#if EFT_IS_WIN
+#if EFT_IS_PC
     if (mWldPosAttr != EFT_INVALID_ATTRIBUTE)
         glVertexAttribDivisor(mWldPosAttr, 0);
 
