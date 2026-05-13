@@ -114,7 +114,7 @@ private:
     friend class EmitterComplexCalc;
     friend class EmitterCalc;
 };
-static_assert(sizeof(EmitterController) == 0x14, "nw::eft::EmitterController size mismatch");
+//static_assert(sizeof(EmitterController) == 0x14, "nw::eft::EmitterController size mismatch");
 
 class System;
 
@@ -684,7 +684,7 @@ private:
     friend class EmitterCalc;
     friend class Renderer;
 };
-static_assert(sizeof(EmitterSet) == 0x294, "nw::eft::EmitterSet size mismatch");
+//static_assert(sizeof(EmitterSet) == 0x294, "nw::eft::EmitterSet size mismatch");
 
 } } // namespace nw::eft
 

@@ -122,6 +122,14 @@ s32 System::SearchEmitterSetID(const char* name, s32 resId) const
     return mResource[resId]->SearchEmitterSetID(name);
 }
 
+const char* System::SearchEmitterSetName(s32 emitterSetId, s32 resId) const
+{
+    if (!mResource[resId])
+        return NULL;
+    
+    return mResource[resId]->GetEmitterSetName(emitterSetId);
+}
+
 EmitterInstance* System::GetEmitter(u8 groupID, u32 idx)
 {
     u32 cnt = 0;

@@ -13,13 +13,13 @@ struct EmitterPreCalcArg
 {
     EmitterInstance*    emitter;
 };
-static_assert(sizeof(EmitterPreCalcArg) == 4, "nw::eft::EmitterPreCalcArg size mismatch");
+//static_assert(sizeof(EmitterPreCalcArg) == 4, "nw::eft::EmitterPreCalcArg size mismatch");
 
 struct EmitterPostCalcArg
 {
     EmitterInstance* emitter;
 };
-static_assert(sizeof(EmitterPostCalcArg) == 4, "nw::eft::EmitterPostCalcArg size mismatch");
+//static_assert(sizeof(EmitterPostCalcArg) == 4, "nw::eft::EmitterPostCalcArg size mismatch");
 
 struct EmitterDrawOverrideArg
 {
@@ -28,19 +28,19 @@ struct EmitterDrawOverrideArg
     bool                    cacheFlush;
     void*                   userParam;
 };
-static_assert(sizeof(EmitterDrawOverrideArg) == 0x10, "nw::eft::EmitterDrawOverrideArg size mismatch");
+//static_assert(sizeof(EmitterDrawOverrideArg) == 0x10, "nw::eft::EmitterDrawOverrideArg size mismatch");
 
 struct ParticleEmitArg
 {
     PtclInstance*   particle;
 };
-static_assert(sizeof(ParticleEmitArg) == 4, "nw::eft::ParticleEmitArg size mismatch");
+//static_assert(sizeof(ParticleEmitArg) == 4, "nw::eft::ParticleEmitArg size mismatch");
 
 struct ParticleRemoveArg
 {
     PtclInstance*   particle;
 };
-static_assert(sizeof(ParticleRemoveArg) == 4, "nw::eft::ParticleRemoveArg size mismatch");
+//static_assert(sizeof(ParticleRemoveArg) == 4, "nw::eft::ParticleRemoveArg size mismatch");
 
 struct ParticleCalcArg
 {
@@ -49,7 +49,7 @@ struct ParticleCalcArg
     CpuCore             core;
     bool                skipBehavior;
 };
-static_assert(sizeof(ParticleCalcArg) == 0x10, "nw::eft::ParticleCalcArg size mismatch");
+//static_assert(sizeof(ParticleCalcArg) == 0x10, "nw::eft::ParticleCalcArg size mismatch");
 
 struct ShaderEmitterPostCalcArg
 {
@@ -57,7 +57,7 @@ struct ShaderEmitterPostCalcArg
     bool             skipBehavior;
     bool             isChild;
 };
-static_assert(sizeof(ShaderEmitterPostCalcArg) == 8, "nw::eft::ShaderEmitterPostCalcArg size mismatch");
+//static_assert(sizeof(ShaderEmitterPostCalcArg) == 8, "nw::eft::ShaderEmitterPostCalcArg size mismatch");
 
 struct ShaderDrawOverrideArg
 {
@@ -66,7 +66,7 @@ struct ShaderDrawOverrideArg
     bool                    cacheFlush;
     void*                   userParam;
 };
-static_assert(sizeof(ShaderDrawOverrideArg) == 0x10, "nw::eft::ShaderDrawOverrideArg size mismatch");
+//static_assert(sizeof(ShaderDrawOverrideArg) == 0x10, "nw::eft::ShaderDrawOverrideArg size mismatch");
 
 struct RenderStateSetArg
 {
@@ -75,7 +75,7 @@ struct RenderStateSetArg
     bool                    cacheFlush;
     void*                   userParam;
 };
-static_assert(sizeof(RenderStateSetArg) == 0x10, "nw::eft::RenderStateSetArg size mismatch");
+//static_assert(sizeof(RenderStateSetArg) == 0x10, "nw::eft::RenderStateSetArg size mismatch");
 
 typedef void (*UserDataEmitterPreCalcCallback)(EmitterPreCalcArg& arg);
 typedef void (*UserDataEmitterPostCalcCallback)(EmitterPostCalcArg& arg);

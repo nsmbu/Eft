@@ -19,7 +19,7 @@ public:
     virtual void* Alloc(u32 size, s32 alignment = EFT_HEAP_DEAFULT_ALIGNMENT) = 0;
     virtual void Free(void* ptr) = 0;
 };
-static_assert(sizeof(Heap) == 4, "nw::eft::Heap size mismatch");
+//static_assert(sizeof(Heap) == 4, "nw::eft::Heap size mismatch");
 
 } } // namespace nw::eft
 

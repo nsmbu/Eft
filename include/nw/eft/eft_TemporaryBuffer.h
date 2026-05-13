@@ -102,7 +102,7 @@ private:
     u32     mFlushedSize;
     void*   mBuffer[EFT_TEMPORARY_BUFFER_MAX];
 };
-static_assert(sizeof(TemporaryBuffer) == 0x18, "nw::eft::TemporaryBuffer size mismatch");
+//static_assert(sizeof(TemporaryBuffer) == 0x18, "nw::eft::TemporaryBuffer size mismatch");
 
 } } // namespace nw::eft
 

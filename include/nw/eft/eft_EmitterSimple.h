@@ -27,7 +27,7 @@ protected:
     void ApplyTransformAnim(EmitterInstance* e);
     void EmitSameDistance(const SimpleEmitterData* __restrict res, EmitterInstance* e);
 };
-static_assert(sizeof(EmitterSimpleCalc) == 4, "nw::eft::EmitterSimpleCalc size mismatch");
+//static_assert(sizeof(EmitterSimpleCalc) == 4, "nw::eft::EmitterSimpleCalc size mismatch");
 
 } } // namespace nw::eft
 

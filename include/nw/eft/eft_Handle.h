@@ -41,7 +41,7 @@ private:
 
     friend class System;
 };
-static_assert(sizeof(Handle) == 8, "nw::eft::Handle size mismatch");
+//static_assert(sizeof(Handle) == 8, "nw::eft::Handle size mismatch");
 
 } } // namespace nw::eft
 

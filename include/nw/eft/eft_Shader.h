@@ -114,7 +114,7 @@ struct VertexShaderKey
         if (res->billboardType == EFT_BILLBOARD_TYPE_STRIPE ||
             res->billboardType == EFT_BILLBOARD_TYPE_COMPLEX_STRIPE)
         {
-            const StripeData* stripeRes = reinterpret_cast<const StripeData*>((u32)res + res->stripeDataOffset);
+            const StripeData* stripeRes = reinterpret_cast<const StripeData*>((uintptr_t)res + res->stripeDataOffset);
 
             mStripeTypeVariation = stripeRes->stripeType;
             if (res->stripeFlg & EFT_STRIPE_FLAG_EMITTER_COORD)

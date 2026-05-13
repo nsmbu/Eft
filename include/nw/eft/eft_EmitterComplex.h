@@ -49,7 +49,7 @@ private:
 
     static void CalcComplex(EmitterInstance* __restrict e, PtclInstance* __restrict ptcl, CpuCore core);
 };
-static_assert(sizeof(EmitterComplexCalc) == 4, "nw::eft::EmitterComplexCalc size mismatch");
+//static_assert(sizeof(EmitterComplexCalc) == 4, "nw::eft::EmitterComplexCalc size mismatch");
 
 } } // namespace nw::eft
 

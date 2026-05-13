@@ -35,7 +35,7 @@ void EmitterSimpleCalc::ApplyAnim(EmitterInstance* e)
         for (u32 i = 0; i < keyAnimArray->numAnims; ++i)
         {
             if (i != 0)
-                info = reinterpret_cast<KeyFrameAnim*>((u32)info + info->offset);
+                info = reinterpret_cast<KeyFrameAnim*>((uintptr_t)info + info->offset);
 
             e->emitAnimValue[info->target] = CalcAnimKeyFrame(info, e->cnt);
         }

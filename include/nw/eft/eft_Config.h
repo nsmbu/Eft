@@ -154,7 +154,7 @@ protected:
     u32             mStripeNum;
     u32             mSizeDoubleBufferSize;
 };
-static_assert(sizeof(Config) == 0x20, "nw::eft::Config size mismatch");
+//static_assert(sizeof(Config) == 0x20, "nw::eft::Config size mismatch");
 
 } } // namespace nw::eft
 

@@ -53,7 +53,7 @@ struct ResourceEmitterSet
     Primitive**         primitiveArray;
     u32                 primitiveNum;
 };
-static_assert(sizeof(ResourceEmitterSet) == 0x38, "nw::eft::ResourceEmitterSet size mismatch");
+//static_assert(sizeof(ResourceEmitterSet) == 0x38, "nw::eft::ResourceEmitterSet size mismatch");
 
 class Resource
 {
@@ -90,7 +90,7 @@ public:
 
     const CommonEmitterData* GetEmitterData(s32 emitterSetID, s32 emitterID) const
     {
-        return mResEmitterSet[emitterSetID].tblData[emitterID].emitter;
+        return mResEmitterSet[emitterSetID].tblData[emitterID].emitter.get();
     }
 
     const EmitterSetData* GetEmitterSetData(s32 emitterSetID) const
@@ -120,7 +120,7 @@ public:
 
     const char* GetEmitterName(s32 emitterSetID, s32 emitterID) const
     {
-        return  mResEmitterSet[emitterSetID].tblData[emitterID].emitter->name;
+        return  mResEmitterSet[emitterSetID].tblData[emitterID].emitter.get()->name.get();
     }
 
     ResourceEmitterSet* GetEmitterSetResource(s32 emitterSetID) const
@@ -140,7 +140,7 @@ public:
 
     const CommonEmitterData* GetEmitterDataROM(s32 emitterSetID, s32 emitterID) const
     {
-        return mResEmitterSet[emitterSetID].tblDataROM[emitterID].emitter;
+        return mResEmitterSet[emitterSetID].tblDataROM[emitterID].emitter.get();
     }
 
     const EmitterSetData* GetEmitterSetDataROM(s32 emitterSetID) const
@@ -155,7 +155,7 @@ public:
 
     const char* GetEmitterNameROM(s32 emitterSetID, s32 emitterID) const
     {
-        return mResEmitterSet[emitterSetID].tblDataROM[emitterID].emitter->name;
+        return mResEmitterSet[emitterSetID].tblDataROM[emitterID].emitter.get()->name.get();
     }
 
     const char* GetEmitterSetName(s32 emitterSetID) const
@@ -230,7 +230,7 @@ private:
     Primitive**                 mPrimitive;
     u32                         mPrimitiveNum;
 };
-static_assert(sizeof(Resource) == 0x30, "nw::eft::Resource size mismatch");
+//static_assert(sizeof(Resource) == 0x30, "nw::eft::Resource size mismatch");
 
 } } // namespace nw::eft
 

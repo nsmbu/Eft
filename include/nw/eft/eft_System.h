@@ -251,7 +251,7 @@ private:
         EmitterSet*     emitterSet;
         u32             z;
     };
-    static_assert(sizeof(sortEmitterSets) == 8, "nw::eft::System::sortEmitterSets size mismatch");
+    //static_assert(sizeof(sortEmitterSets) == 8, "nw::eft::System::sortEmitterSets size mismatch");
 
     static int ComparePtclViewZ(const void* a, const void* b);
 

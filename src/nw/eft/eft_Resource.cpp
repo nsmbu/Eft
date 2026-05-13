@@ -315,15 +315,15 @@ void Resource::Initialize(Heap* heap, void* bin, s32 resourceID, System* ptclSys
     mResourceID = resourceID;
 
     mHeader     = LoadNwEftHeaderData(bin);
-    mNameTbl    = reinterpret_cast<char*>((u32)bin + mHeader->nameTblPos);
-    mTextureTbl = reinterpret_cast<char*>((u32)bin + mHeader->textureTblPos);
+    mNameTbl    = reinterpret_cast<char*>((uintptr_t)bin + mHeader->nameTblPos);
+    mTextureTbl = reinterpret_cast<char*>((uintptr_t)bin + mHeader->textureTblPos);
 
     if (mHeader->numEmitterSet == 0)
         return;
 
     {
-        ShaderImageInformation* shaderImageInfo = LoadNwEftShaderImageInformation((void*)((u32)bin + mHeader->shaderTblPos));
-        ShaderInformation* shaderInfo = reinterpret_cast<ShaderInformation*>((u32)shaderImageInfo + shaderImageInfo->offsetShaderBinInfo);
+        ShaderImageInformation* shaderImageInfo = LoadNwEftShaderImageInformation((void*)((uintptr_t)bin + mHeader->shaderTblPos));
+        ShaderInformation* shaderInfo = reinterpret_cast<ShaderInformation*>((uintptr_t)shaderImageInfo + shaderImageInfo->offsetShaderBinInfo);
         char* binTop = reinterpret_cast<char*>(shaderInfo + shaderImageInfo->shaderNum);
 
         mShaderNum = shaderImageInfo->shaderNum;
@@ -343,8 +343,8 @@ void Resource::Initialize(Heap* heap, void* bin, s32 resourceID, System* ptclSys
     }
 
     {
-        PrimitiveImageInformation* imageInfo = LoadNwEftPrimitiveImageInformation((void*)((u32)bin + mHeader->primitiveTblPos));
-        PrimitiveTableInfo* infoTop = reinterpret_cast<PrimitiveTableInfo*>((u32)imageInfo + imageInfo->offsetPrimitiveTableInfo);
+        PrimitiveImageInformation* imageInfo = LoadNwEftPrimitiveImageInformation((void*)((uintptr_t)bin + mHeader->primitiveTblPos));
+        PrimitiveTableInfo* infoTop = reinterpret_cast<PrimitiveTableInfo*>((uintptr_t)imageInfo + imageInfo->offsetPrimitiveTableInfo);
         char* primitiveTableStart = reinterpret_cast<char*>(infoTop + imageInfo->primitiveNum);
 
         mPrimitiveNum = imageInfo->primitiveNum;
@@ -389,8 +389,8 @@ void Resource::Initialize(Heap* heap, void* bin, s32 resourceID, System* ptclSys
         void* texture_addr = NULL;
 
         resSet->setData        = LoadNwEftEmitterSetData(&((reinterpret_cast<EmitterSetData*>(mHeader + 1))[i]));
-        resSet->setData->name  = &mNameTbl[resSet->setData->namePos];
-        resSet->setName        = resSet->setData->name;
+        resSet->setData->name.set(&mNameTbl[resSet->setData->namePos]);
+        resSet->setName        = resSet->setData->name.get();
         resSet->numEmitter     = resSet->setData->numEmitter;
         resSet->userData       = resSet->setData->userData;
         resSet->isShowDetail   = false;
@@ -403,65 +403,65 @@ void Resource::Initialize(Heap* heap, void* bin, s32 resourceID, System* ptclSys
 
         if (resSet->setData->emitterTblPos != 0)
         {
-            resSet->tblData = (/*resSet->setData->emitterTbl =*/ reinterpret_cast<EmitterTblData*>((u32)bin + resSet->setData->emitterTblPos));
+            resSet->tblData = (/*resSet->setData->emitterTbl =*/ reinterpret_cast<EmitterTblData*>((uintptr_t)bin + resSet->setData->emitterTblPos));
 
             for (s32 j = 0; j < resSet->numEmitter; j++)
             {
                 EmitterTblData* e = LoadNwEftEmitterTblData(&resSet->tblData[j]);
 
                 if (e->emitterPos == 0)
-                    e->emitter = NULL;
+                    e->emitter.set(NULL);
 
                 else
                 {
-                    e->emitter = LoadNwEftEmitterData((void*)((u32)bin + e->emitterPos));
-                    e->emitter->name = &mNameTbl[e->emitter->namePos];
+                    e->emitter.set(LoadNwEftEmitterData((void*)((uintptr_t)bin + e->emitterPos)));
+                    e->emitter.get()->name.set(&mNameTbl[e->emitter.get()->namePos]);
 
-                    if (e->emitter->texRes[EFT_TEXTURE_SLOT_0].nativeDataSize > 0)
+                    if (e->emitter.get()->texRes[EFT_TEXTURE_SLOT_0].nativeDataSize > 0)
                     {
-                        texture_addr = reinterpret_cast<void*>((u32)mTextureTbl + e->emitter->texRes[EFT_TEXTURE_SLOT_0].nativeDataPos);
-                        CreateFtexbTextureHandle(heap, texture_addr, e->emitter->texRes[EFT_TEXTURE_SLOT_0]);
+                        texture_addr = reinterpret_cast<void*>((uintptr_t)mTextureTbl + e->emitter.get()->texRes[EFT_TEXTURE_SLOT_0].nativeDataPos);
+                        CreateFtexbTextureHandle(heap, texture_addr, e->emitter.get()->texRes[EFT_TEXTURE_SLOT_0]);
                     }
-                    else if (e->emitter->texRes[EFT_TEXTURE_SLOT_0].originalDataSize > 0)
+                    else if (e->emitter.get()->texRes[EFT_TEXTURE_SLOT_0].originalDataSize > 0)
                     {
-                        texture_addr = reinterpret_cast<void*>((u32)mTextureTbl + e->emitter->texRes[EFT_TEXTURE_SLOT_0].originalDataPos);
-                        CreateOriginalTextureHandle(heap, texture_addr, e->emitter->texRes[EFT_TEXTURE_SLOT_0]);
-                    }
-
-                    if (e->emitter->texRes[EFT_TEXTURE_SLOT_1].nativeDataSize > 0)
-                    {
-                        texture_addr = reinterpret_cast<void*>((u32)mTextureTbl + e->emitter->texRes[EFT_TEXTURE_SLOT_1].nativeDataPos);
-                        CreateFtexbTextureHandle(heap, texture_addr, e->emitter->texRes[EFT_TEXTURE_SLOT_1]);
-                    }
-                    else if (e->emitter->texRes[EFT_TEXTURE_SLOT_1].originalDataSize > 0)
-                    {
-                        texture_addr = reinterpret_cast<void*>((u32)mTextureTbl + e->emitter->texRes[EFT_TEXTURE_SLOT_1].originalDataPos);
-                        CreateOriginalTextureHandle(heap, texture_addr, e->emitter->texRes[EFT_TEXTURE_SLOT_1]);
+                        texture_addr = reinterpret_cast<void*>((uintptr_t)mTextureTbl + e->emitter.get()->texRes[EFT_TEXTURE_SLOT_0].originalDataPos);
+                        CreateOriginalTextureHandle(heap, texture_addr, e->emitter.get()->texRes[EFT_TEXTURE_SLOT_0]);
                     }
 
-                    if (e->emitter->type == EFT_EMITTER_TYPE_COMPLEX)
+                    if (e->emitter.get()->texRes[EFT_TEXTURE_SLOT_1].nativeDataSize > 0)
                     {
-                        ComplexEmitterData* complex = static_cast<ComplexEmitterData*>(e->emitter);
+                        texture_addr = reinterpret_cast<void*>((uintptr_t)mTextureTbl + e->emitter.get()->texRes[EFT_TEXTURE_SLOT_1].nativeDataPos);
+                        CreateFtexbTextureHandle(heap, texture_addr, e->emitter.get()->texRes[EFT_TEXTURE_SLOT_1]);
+                    }
+                    else if (e->emitter.get()->texRes[EFT_TEXTURE_SLOT_1].originalDataSize > 0)
+                    {
+                        texture_addr = reinterpret_cast<void*>((uintptr_t)mTextureTbl + e->emitter.get()->texRes[EFT_TEXTURE_SLOT_1].originalDataPos);
+                        CreateOriginalTextureHandle(heap, texture_addr, e->emitter.get()->texRes[EFT_TEXTURE_SLOT_1]);
+                    }
+
+                    if (e->emitter.get()->type == EFT_EMITTER_TYPE_COMPLEX)
+                    {
+                        ComplexEmitterData* complex = static_cast<ComplexEmitterData*>(e->emitter.get());
                         if (complex->childFlg & EFT_CHILD_FLAG_ENABLE)
                         {
                             ChildData* cres = reinterpret_cast<ChildData*>(complex + 1);
                             if (cres->childTex.nativeDataSize > 0)
                             {
-                                texture_addr = reinterpret_cast<void*>((u32)mTextureTbl + cres->childTex.nativeDataPos);
+                                texture_addr = reinterpret_cast<void*>((uintptr_t)mTextureTbl + cres->childTex.nativeDataPos);
                                 CreateFtexbTextureHandle(heap, texture_addr, cres->childTex);
                             }
                             else if (cres->childTex.originalDataSize > 0)
                             {
-                                texture_addr = reinterpret_cast<void*>((u32)mTextureTbl + cres->childTex.originalDataPos);
+                                texture_addr = reinterpret_cast<void*>((uintptr_t)mTextureTbl + cres->childTex.originalDataPos);
                                 CreateOriginalTextureHandle(heap, texture_addr, cres->childTex);
                             }
                         }
                     }
 
-                    if (e->emitter->animKeyTable.dataSize)
+                    if (e->emitter.get()->animKeyTable.dataSize)
                     {
-                        char* animkeyTble = reinterpret_cast<char*>((u32)bin + mHeader->animkeyTblPos);
-                        e->emitter->animKeyTable.animKeyTable = LoadNwEftKeyFrameAnimArray(animkeyTble + e->emitter->animKeyTable.animPos);
+                        char* animkeyTble = reinterpret_cast<char*>((uintptr_t)bin + mHeader->animkeyTblPos);
+                        e->emitter.get()->animKeyTable.animKeyTable.set(LoadNwEftKeyFrameAnimArray(animkeyTble + e->emitter.get()->animKeyTable.animPos));
                     }
                 }
             }
@@ -510,21 +510,21 @@ void Resource::Finalize(Heap* heap)
         {
             EmitterTblData* e = &resSet->tblData[j];
 
-            if (e->emitter->texRes[EFT_TEXTURE_SLOT_0].handle)
+            if (e->emitter.get()->texRes[EFT_TEXTURE_SLOT_0].handle)
             {
-                bool isOriginalTexture = (e->emitter->texRes[EFT_TEXTURE_SLOT_0].nativeDataSize == 0) ? true : false;
-                DeleteTextureHandle(heapTemp, e->emitter->texRes[EFT_TEXTURE_SLOT_0], isOriginalTexture);
+                bool isOriginalTexture = (e->emitter.get()->texRes[EFT_TEXTURE_SLOT_0].nativeDataSize == 0) ? true : false;
+                DeleteTextureHandle(heapTemp, e->emitter.get()->texRes[EFT_TEXTURE_SLOT_0], isOriginalTexture);
             }
 
-            if (e->emitter->texRes[EFT_TEXTURE_SLOT_1].handle)
+            if (e->emitter.get()->texRes[EFT_TEXTURE_SLOT_1].handle)
             {
-                bool isOriginalTexture = (e->emitter->texRes[EFT_TEXTURE_SLOT_1].nativeDataSize == 0) ? true : false;
-                DeleteTextureHandle(heapTemp, e->emitter->texRes[EFT_TEXTURE_SLOT_1], isOriginalTexture);
+                bool isOriginalTexture = (e->emitter.get()->texRes[EFT_TEXTURE_SLOT_1].nativeDataSize == 0) ? true : false;
+                DeleteTextureHandle(heapTemp, e->emitter.get()->texRes[EFT_TEXTURE_SLOT_1], isOriginalTexture);
             }
 
-            if (e->emitter->type == EFT_EMITTER_TYPE_COMPLEX)
+            if (e->emitter.get()->type == EFT_EMITTER_TYPE_COMPLEX)
             {
-                ComplexEmitterData* complex = static_cast<ComplexEmitterData*>(e->emitter);
+                ComplexEmitterData* complex = static_cast<ComplexEmitterData*>(e->emitter.get());
                 if (complex->childFlg & EFT_CHILD_FLAG_ENABLE)
                 {
                     ChildData* cres = reinterpret_cast<ChildData*>(complex + 1);
@@ -579,7 +579,7 @@ s32 Resource::SearchEmitterSetID(const char* name) const
 s32 Resource::SearchEmitterID(s32 emitterSetID, const char* emitterName) const
 {
     for (s32 j = 0; j < mResEmitterSet[emitterSetID].numEmitter; ++j)
-        if (strcmp(emitterName, mResEmitterSet[emitterSetID].tblDataROM[j].emitter->name) == 0)
+        if (strcmp(emitterName, mResEmitterSet[emitterSetID].tblDataROM[j].emitter.get()->name.get()) == 0)
             return j;
 
     return EFT_INVALID_EMITTER_ID;
@@ -588,7 +588,7 @@ s32 Resource::SearchEmitterID(s32 emitterSetID, const char* emitterName) const
 s32 Resource::SearchEmitterID(s32 emitterSetID, const char* emitterName, u32 emitterIdx) const
 {
     for (s32 j = 0; j < mResEmitterSet[emitterSetID].numEmitter; ++j)
-        if (strcmp(emitterName, mResEmitterSet[emitterSetID].tblDataROM[j].emitter->name) == 0)
+        if (strcmp(emitterName, mResEmitterSet[emitterSetID].tblDataROM[j].emitter.get()->name.get()) == 0)
             if (j == emitterIdx)
                 return j;
 
@@ -602,7 +602,7 @@ bool Resource::BindResource(s32 targetSetID, ResourceBind* bind, EmitterTblData*
     void* oldRes[EFT_EMITTER_INSET_NUM];
     s32   numRes = resSet->numEmitter;
     for (s32 i = 0; i < numRes; i++)
-        oldRes[i] = resSet->tblData[i].emitter;
+        oldRes[i] = resSet->tblData[i].emitter.get();
 
     bind->source                 = resSet->setData;
     bind->emitterSetID           = targetSetID;
@@ -641,7 +641,7 @@ bool Resource::UnbindResource(ResourceBind* bind, bool isReBind, bool isKill)
     void* oldRes[EFT_EMITTER_INSET_NUM];
     s32   numRes = resSet->numEmitter;
     for (s32 i = 0; i < numRes; i++)
-        oldRes[i] = resSet->tblData[i].emitter;
+        oldRes[i] = resSet->tblData[i].emitter.get();
 
     resSet->tblData    = bind->saveTbl;
     resSet->numEmitter = bind->saveNumEmitter;

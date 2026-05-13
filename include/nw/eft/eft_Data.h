@@ -25,7 +25,7 @@ enum CpuCore
     EFT_CPU_CORE_0 = 0,
     EFT_CPU_CORE_1 = 1,
     EFT_CPU_CORE_2 = 2,
-    EFT_CPU_CORE_MAX = 3,
+    EFT_CPU_CORE_MAX = 3, // 🥀
     EFT_CPU_CORE_FORCE_4BYTE = 0x80000000
 };
 static_assert(sizeof(CpuCore) == 4, "nw::eft::CpuCore size mismatch");
@@ -719,17 +719,17 @@ struct EmitterSetData
     u32     userData;
     u32     lastUpdateDate;
     s32     namePos;
-    char*   name;
+    SerializedPtr<char>   name;
     s32     numEmitter;
     s32     emitterTblPos;
-    u32*    emitterTbl;
+    SerializedPtr<u32>    emitterTbl;
 };
 static_assert(sizeof(EmitterSetData) == 0x1C, "nw::eft::EmitterSetData size mismatch");
 
 struct EmitterTblData
 {
     s32                 emitterPos;
-    CommonEmitterData*  emitter;
+    SerializedPtr<CommonEmitterData>  emitter;
 };
 static_assert(sizeof(EmitterTblData) == 8, "nw::eft::EmitterTblData size mismatch");
 
@@ -768,7 +768,7 @@ static_assert(sizeof(TextureRes) == 0x114, "nw::eft::TextureRes size mismatch");
 
 struct AnimKeyTable
 {
-    void*               animKeyTable;
+    SerializedPtr<void>               animKeyTable;
     u32                 animPos;
     u32                 dataSize;
 };
@@ -776,7 +776,7 @@ static_assert(sizeof(AnimKeyTable) == 0xC, "nw::eft::AnimKeyTable size mismatch"
 
 struct PrimitiveFigure
 {
-    void*               primitiveTableInfo;
+    SerializedPtr<void>               primitiveTableInfo;
     u32                 dataSize;
     u32                 index;
 };
@@ -792,7 +792,7 @@ struct CommonEmitterData
     f32             userDataF[EFT_USER_DATA_PARAM_MAX];
     s32             userCallbackID;
     s32             namePos;
-    char*           name;
+    SerializedPtr<char>           name;
     TextureRes      texRes[EFT_TEXTURE_SLOT_BIN_MAX];
     AnimKeyTable    animKeyTable;
     PrimitiveFigure primitiveFigure;

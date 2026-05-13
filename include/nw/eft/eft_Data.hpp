@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <nw/eft/eft_AnimKeyFrame.h>
 #include <nw/eft/eft_Data.h>
 #include <nw/eft/eft_Shader.h>
@@ -682,20 +683,20 @@ static inline nw::eft::CommonEmitterData* LoadNwEftEmitterData(void* data, bool 
         if (res->fieldFlg != 0)
         {
             assert(res->fieldDataOffset >= sizeof(nw::eft::ComplexEmitterData));
-            (void)LoadNwEftFieldData((void*)((u32)res + res->fieldDataOffset), res->fieldFlg);
+            (void)LoadNwEftFieldData((void*)((uintptr_t)res + res->fieldDataOffset), res->fieldFlg);
         }
 
         if (res->fluctuationFlg & nw::eft::EFT_FLUCTUATION_FALG_ENABLE)
         {
             assert(res->fluctuationDataOffset >= sizeof(nw::eft::ComplexEmitterData));
-            (void)LoadNwEftFluctuationData((void*)((u32)res + res->fluctuationDataOffset));
+            (void)LoadNwEftFluctuationData((void*)((uintptr_t)res + res->fluctuationDataOffset));
         }
 
         if (res->billboardType == nw::eft::EFT_BILLBOARD_TYPE_STRIPE ||
             res->billboardType == nw::eft::EFT_BILLBOARD_TYPE_COMPLEX_STRIPE)
         {
             assert(res->stripeDataOffset >= sizeof(nw::eft::ComplexEmitterData));
-            (void)LoadNwEftStripeData((void*)((u32)res + res->stripeDataOffset));
+            (void)LoadNwEftStripeData((void*)((uintptr_t)res + res->stripeDataOffset));
         }
     }
 #endif // EFT_IS_PC
@@ -754,7 +755,7 @@ static inline nw::eft::KeyFrameAnimArray* LoadNwEftKeyFrameAnimArray(void* data,
     for (u32 i = 0; i < keyAnimArray->numAnims; i++)
     {
         if (i != 0)
-            info = reinterpret_cast<nw::eft::KeyFrameAnim*>((u32)info + info->offset);
+            info = reinterpret_cast<nw::eft::KeyFrameAnim*>((uintptr_t)info + info->offset);
 
         (void)LoadNwEftKeyFrameAnim(info, is_be);
     }

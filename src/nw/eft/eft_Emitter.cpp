@@ -46,7 +46,7 @@ void EmitterInstance::Init(const SimpleEmitterData* resource)
     transRnd.y         = /* rnd.GetF32Range(-1.0, 1.0f) */ (rnd.GetF32() * 2.0f - 1.0f) * res->transRnd.y;
     transRnd.z         = /* rnd.GetF32Range(-1.0, 1.0f) */ (rnd.GetF32() * 2.0f - 1.0f) * res->transRnd.z;
 
-    emitterAnimArray   = (KeyFrameAnimArray*)res->animKeyTable.animKeyTable;
+    emitterAnimArray   = (KeyFrameAnimArray*)res->animKeyTable.animKeyTable.get();
     emitVessel         = 0.0f;
     isEmitted          = false;
     isCalculated       = false;
@@ -279,7 +279,7 @@ static inline bool _isExistKeyFrameAnim(EmitterInstance* __restrict e, AnimKeyFr
     for (u32 i = 0; i < keyAnimArray->numAnims; ++i)
     {
         if (i != 0)
-            info = reinterpret_cast<KeyFrameAnim*>((u32)info + info->offset);
+            info = reinterpret_cast<KeyFrameAnim*>((uintptr_t)info + info->offset);
 
         if (info->target == animType)
             return true;

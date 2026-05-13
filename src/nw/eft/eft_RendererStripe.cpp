@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <nw/eft/eft_Emitter.h>
 #include <nw/eft/eft_EmitterSet.h>
 #include <nw/eft/eft_Particle.h>
@@ -18,7 +19,7 @@ s32 Renderer::MakeStripeAttributeBlockCore(PtclStripe* stripe, StripeVertexBuffe
     stripe->numDrawVertex = 0;
 
     const ComplexEmitterData* res  = stripe->res;
-    const StripeData*         sres = reinterpret_cast<const StripeData*>((u32)res + res->stripeDataOffset);
+    const StripeData*         sres = reinterpret_cast<const StripeData*>((uintptr_t)res + res->stripeDataOffset);
 
     s32 numVertex = stripe->numHistory;
 
@@ -161,7 +162,7 @@ s32 Renderer::MakeStripeAttributeBlockCoreDivide(PtclStripe* stripe, StripeVerte
     stripe->numDrawVertex = 0;
 
     const ComplexEmitterData* res  = stripe->res;
-    const StripeData*         sres = reinterpret_cast<const StripeData*>((u32)res + res->stripeDataOffset);
+    const StripeData*         sres = reinterpret_cast<const StripeData*>((uintptr_t)res + res->stripeDataOffset);
 
     s32 numVertex = stripe->numHistory;
     if (numVertex < 3)
@@ -360,7 +361,7 @@ bool Renderer::MakeStripeAttributeBlock(EmitterInstance* emitter)
         return false;
 
     const ComplexEmitterData* res  = stripe->res;
-    const StripeData*         sres = reinterpret_cast<const StripeData*>((u32)res + res->stripeDataOffset);
+    const StripeData*         sres = reinterpret_cast<const StripeData*>((uintptr_t)res + res->stripeDataOffset);
 
     s32 numDivide = sres->stripeDivideNum;
 
@@ -431,7 +432,7 @@ bool Renderer::MakeStripeAttributeBlock(EmitterInstance* emitter)
 bool Renderer::ConnectionStripeUvScaleCalc(f32& frateScaleUv, f32& uvStartOfs, const EmitterInstance* emitter, s32 numLoop, f32 frateScale, s32 tailType)
 {
     const ComplexEmitterData* res  = reinterpret_cast<const ComplexEmitterData*>(emitter->ptclHead->res);
-    const StripeData*         sres = reinterpret_cast<const StripeData*>((u32)res + res->stripeDataOffset);
+    const StripeData*         sres = reinterpret_cast<const StripeData*>((uintptr_t)res + res->stripeDataOffset);
 
     bool ret = false;
     uvStartOfs = 0.0f;
@@ -476,7 +477,7 @@ s32 Renderer::MakeConnectionStripeAttributeBlockCore(EmitterInstance* emitter, s
         return 0;
 
     const ComplexEmitterData* res  = reinterpret_cast<const ComplexEmitterData*>(emitter->ptclHead->res);
-    const StripeData*         sres = reinterpret_cast<const StripeData*>((u32)res + res->stripeDataOffset);
+    const StripeData*         sres = reinterpret_cast<const StripeData*>((uintptr_t)res + res->stripeDataOffset);
 
     s32 numLoop = numPtcl;
     bool bTailConnect = false;
@@ -710,7 +711,7 @@ s32 Renderer::MakeConnectionStripeAttributeBlockCore(EmitterInstance* emitter, s
 s32 Renderer::MakeConnectionStripeAttributeBlockCoreDivide(EmitterInstance* emitter, s32 numPtcl, PtclInstance* pTailPtcl, PtclInstance* pTail2ndPtcl, s32 tailType, StripeVertexBuffer* stripeVertex, s32 wroteVertexNum)
 {
     const ComplexEmitterData* res  = reinterpret_cast<const ComplexEmitterData*>(emitter->ptclHead->res);
-    const StripeData*         sres = reinterpret_cast<const StripeData*>((u32)res + res->stripeDataOffset);
+    const StripeData*         sres = reinterpret_cast<const StripeData*>((uintptr_t)res + res->stripeDataOffset);
 
     s32 numDivide = sres->stripeDivideNum;
 
@@ -1062,7 +1063,7 @@ StripeVertexBuffer* Renderer::MakeConnectionStripeAttributeBlock(EmitterInstance
     s32 tailType = 0;
 
     const ComplexEmitterData* res  = reinterpret_cast<const ComplexEmitterData*>(emitter->ptclHead->res);
-    const StripeData*         sres = reinterpret_cast<const StripeData*>((u32)res + res->stripeDataOffset);
+    const StripeData*         sres = reinterpret_cast<const StripeData*>((uintptr_t)res + res->stripeDataOffset);
 
     tailType = sres->stripeConnectOpt;
 
@@ -1220,7 +1221,7 @@ void Renderer::EntryConnectionStripe(EmitterInstance* emitter, bool cacheFlush, 
     f32 color1B = ptcl->color[EFT_COLOR_KIND_1].b * emitter->emitAnimValue[EFT_ANIM_COLOR1_B] * setColor.b;
 
     const ComplexEmitterData* res  = static_cast<const ComplexEmitterData*>(emitter->res);
-    const StripeData*         sres = reinterpret_cast<const StripeData*>((u32)res + res->stripeDataOffset);
+    const StripeData*         sres = reinterpret_cast<const StripeData*>((uintptr_t)res + res->stripeDataOffset);
 
     s32 numDrawVertex = emitter->stripeVertexNum;
 
@@ -1380,7 +1381,7 @@ void Renderer::EntryStripe(EmitterInstance* emitter, bool cacheFlush, void* user
         if (res == NULL)
             continue;
 
-        const StripeData* sres = reinterpret_cast<const StripeData*>((u32)res + res->stripeDataOffset);
+        const StripeData* sres = reinterpret_cast<const StripeData*>((uintptr_t)res + res->stripeDataOffset);
 
         if (stripe->numDrawVertex < 4)
             continue;

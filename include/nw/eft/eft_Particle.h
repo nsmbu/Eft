@@ -43,7 +43,7 @@ struct PtclStripe
     u32                         startDrawVertex;
     u32                         numDrawVertex;
 };
-static_assert(sizeof(PtclStripe) == 0x5880, "nw::eft::PtclStripe size mismatch");
+//static_assert(sizeof(PtclStripe) == 0x5880, "nw::eft::PtclStripe size mismatch");
 
 struct AlphaAnim
 {
@@ -180,7 +180,7 @@ struct PtclInstance
     void GetDrawColor0(nw::ut::FloatColor* dstColor);
     void GetDrawColor1(nw::ut::FloatColor* dstColor);
 };
-static_assert(sizeof(PtclInstance) == 0x180, "nw::eft::PtclInstance size mismatch");
+//static_assert(sizeof(PtclInstance) == 0x180, "nw::eft::PtclInstance size mismatch");
 
 } } // namespace nw::eft
 

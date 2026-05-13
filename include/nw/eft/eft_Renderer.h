@@ -33,7 +33,7 @@ private:
         f32             z;
         u32             index;
     };
-    static_assert(sizeof(sortPtcl) == 0xC, "nw::eft::Renderer::sortPtcl size mismatch");
+    //static_assert(sizeof(sortPtcl) == 0xC, "nw::eft::Renderer::sortPtcl size mismatch");
 
     static s32 ComparePtclViewZ(const void* a, const void* b);
 

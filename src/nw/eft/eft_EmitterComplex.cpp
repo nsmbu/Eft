@@ -20,7 +20,7 @@ void EmitterComplexCalc::CalcComplex(EmitterInstance* e, PtclInstance* ptcl, Cpu
 
     if (res->billboardType == EFT_BILLBOARD_TYPE_STRIPE)
     {
-        const StripeData* sres = reinterpret_cast<const StripeData*>((u32)res + res->stripeDataOffset);
+        const StripeData* sres = reinterpret_cast<const StripeData*>((uintptr_t)res + res->stripeDataOffset);
 
         if (ptcl->stripe)
         {
@@ -276,7 +276,7 @@ u32 EmitterComplexCalc::CalcParticle(EmitterInstance* emitter, CpuCore core, boo
                     PtclStripe* stripe = ptcl->stripe;
                     if (stripe)
                     {
-                        const StripeData* sres = reinterpret_cast<const StripeData*>((u32)res + res->stripeDataOffset);
+                        const StripeData* sres = reinterpret_cast<const StripeData*>((uintptr_t)res + res->stripeDataOffset);
 
                         if (stripe->histQStart == stripe->histQEnd)
                         {

@@ -111,7 +111,7 @@ struct EmitterInstance
 
     const char* GetEmitterName() const
     {
-        return res->name;
+        return res->name.get();
     }
 
     BlendType GetBlendType() const
@@ -155,7 +155,7 @@ struct EmitterInstance
         if (cres->billboardType == EFT_BILLBOARD_TYPE_STRIPE ||
             cres->billboardType == EFT_BILLBOARD_TYPE_COMPLEX_STRIPE)
         {
-            return reinterpret_cast<const StripeData*>((u32)cres + cres->stripeDataOffset);
+            return reinterpret_cast<const StripeData*>((uintptr_t)cres + cres->stripeDataOffset);
         }
 
         return NULL;
@@ -214,7 +214,7 @@ struct EmitterInstance
         return res->userDataF[idx];
     }
 };
-static_assert(sizeof(EmitterInstance) == 0x220, "nw::eft::EmitterInstance size mismatch");
+//static_assert(sizeof(EmitterInstance) == 0x220, "nw::eft::EmitterInstance size mismatch");
 
 class System;
 
@@ -307,11 +307,11 @@ protected:
 
     static inline void AddParticle(EmitterInstance* emitter, PtclInstance* ptcl);
 };
-static_assert(sizeof(EmitterCalc) == 4, "nw::eft::EmitterCalc size mismatch");
+//static_assert(sizeof(EmitterCalc) == 4, "nw::eft::EmitterCalc size mismatch");
 
 inline void EmitterCalc::_calcField(const ComplexEmitterData* __restrict res, EmitterInstance* __restrict e, PtclInstance* __restrict ptcl)
 {
-    const void* __restrict fres = reinterpret_cast<const void*>((u32)res + res->fieldDataOffset);
+    const void* __restrict fres = reinterpret_cast<const void*>((uintptr_t)res + res->fieldDataOffset);
 
     if ( res->fieldFlg & EFT_FIELD_MASK_RANDOM      ) fres = _ptclField_Random     (e, ptcl, fres);
     if ( res->fieldFlg & EFT_FIELD_MASK_MAGNET      ) fres = _ptclField_Magnet     (e, ptcl, fres);
