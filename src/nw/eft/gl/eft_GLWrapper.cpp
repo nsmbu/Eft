@@ -530,6 +530,9 @@ static void DecompileProgram(nw::eft::Heap* heap,
 
             {
                 std::ostringstream cmdStrm;
+#ifndef NW_PLATFORM_WIN32
+                cmdStrm << "wine ";
+#endif
                 cmdStrm << "\"" << g_CafePath << "/gx2shader-decompiler.exe\" -v \"" << vertexShaderPath << "\" -p \"" << fragmentShaderPath << "\"";
                 cmd = cmdStrm.str();
             }
@@ -548,6 +551,9 @@ static void DecompileProgram(nw::eft::Heap* heap,
 
             {
                 std::ostringstream cmdStrm;
+#ifndef NW_PLATFORM_WIN32
+                cmdStrm << "wine ";
+#endif
                 cmdStrm << "\"" << g_CafePath << "/spirv-cross.exe\" \"" << vertexShaderSpirvPath << "\" --no-es "  \
                 "--no-420pack-extension --no-support-nonzero-baseinstance " \
                 "--rename-interface-variable out 0 PARAM_0 " \
@@ -614,7 +620,7 @@ static void DecompileProgram(nw::eft::Heap* heap,
                 "--rename-interface-variable out 61 PARAM_61 " \
                 "--rename-interface-variable out 62 PARAM_62 " \
                 "--rename-interface-variable out 63 PARAM_63 " \
-                "--version 410 --output \"" << vertexShaderSrcPath << "\"";
+                "--version 330 --output \"" << vertexShaderSrcPath << "\"";
                 cmd = cmdStrm.str();
             }
 
@@ -626,6 +632,9 @@ static void DecompileProgram(nw::eft::Heap* heap,
 
             {
                 std::ostringstream cmdStrm;
+#ifndef NW_PLATFORM_WIN32
+                cmdStrm << "wine ";
+#endif
                 cmdStrm << "\"" << g_CafePath << "/spirv-cross.exe\" \"" << fragmentShaderSpirvPath << "\" --no-es "  \
                 "--no-420pack-extension --no-support-nonzero-baseinstance " \
                 "--rename-interface-variable in 0 PARAM_0 " \
@@ -692,7 +701,7 @@ static void DecompileProgram(nw::eft::Heap* heap,
                 "--rename-interface-variable in 61 PARAM_61 " \
                 "--rename-interface-variable in 62 PARAM_62 " \
                 "--rename-interface-variable in 63 PARAM_63 " \
-                "--version 410 --output \"" << fragmentShaderSrcPath << "\"";
+                "--version 330 --output \"" << fragmentShaderSrcPath << "\"";
                 cmd = cmdStrm.str();
             }
 
@@ -885,7 +894,7 @@ static void DecompileProgram(nw::eft::Heap* heap,
                 }
             }
 
-            ReplaceString(glFragmentShader, "#version 410", "#version 430");
+            ReplaceString(glFragmentShader, "#version 410", "#version 330");
             ReplaceString(glFragmentShader, "#extension GL_ARB_texture_query_levels : require\n", "");
 
             WriteFile(vertexShaderSrcPath, glVertexShader);
