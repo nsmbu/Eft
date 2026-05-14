@@ -1,7 +1,7 @@
 #ifndef NW_MATH_CONSTANT_H_
 #define NW_MATH_CONSTANT_H_
 
-#include <types.h>
+#include <ninTexUtils/types.h>
 
 namespace nw { namespace math {
 
