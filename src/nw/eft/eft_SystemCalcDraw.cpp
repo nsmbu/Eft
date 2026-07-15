@@ -1,9 +1,12 @@
 #include <nw/eft/eft_Data.h>
 #include <nw/eft/eft_Emitter.h>
 #include <nw/eft/eft_EmitterSet.h>
+#include <nw/eft/eft_FrameRate.h>
 #include <nw/eft/eft_Renderer.h>
 #include <nw/eft/eft_System.h>
 
+#include <algorithm>
+#include <cmath>
 #include <cstring>
 
 namespace nw { namespace eft {
@@ -54,13 +57,7 @@ void System::CalcEmitter(u8 groupID, f32 frameRate)
     {
         if (!emitter->emitterSet->IsStopCalc())
         {
-            if (emitter->frameRate != frameRate)
-            {
-                emitter->emitCnt    = 0.0f;
-                emitter->preEmitCnt = emitter->cnt;
-                emitter->emitSaving = 0.0f;
-                emitter->frameRate  = frameRate;
-            }
+            emitter->frameRate = frameRate;
 
             if (GetCurrentUserDataEmitterPreCalcCallback(emitter))
             {
@@ -85,7 +82,53 @@ void System::CalcEmitter(u8 groupID, f32 frameRate)
     }
 }
 
+void System::CalcSimulation(u8 groupID, f32 frameRate, bool cacheFlush)
+{
+    if (!std::isfinite(frameRate) || frameRate < 0.0f)
+        frameRate = 0.0f;
+
+    if (frameRate == 0.0f)
+    {
+        CalcEmitter(groupID, 0.0f);
+        CalcParticle(cacheFlush, false);
+        return;
+    }
+
+    f32 remaining = frameRate;
+    while (remaining > 0.0f)
+    {
+        f32 step = std::min(remaining, 1.0f);
+
+        for (EmitterInstance* emitter = mEmitterHead[groupID]; emitter; emitter = emitter->next)
+        {
+            step = std::min(step, _nextAuthoredFrameDistance(emitter->cnt));
+            for (PtclInstance* ptcl = emitter->ptclHead; ptcl; ptcl = ptcl->next)
+                step = std::min(step, _nextAuthoredFrameDistance(ptcl->cnt));
+            for (PtclInstance* ptcl = emitter->childHead; ptcl; ptcl = ptcl->next)
+                step = std::min(step, _nextAuthoredFrameDistance(ptcl->cnt));
+        }
+
+        if (!(step > 0.0f))
+            step = std::nextafter(remaining, 0.0f) < remaining
+                 ? remaining - std::nextafter(remaining, 0.0f)
+                 : remaining;
+
+        const bool isFinalStep = step >= remaining;
+        CalcEmitter(groupID, step);
+        CalcParticle(cacheFlush && isFinalStep, !isFinalStep);
+
+        if (isFinalStep)
+            break;
+        remaining -= step;
+    }
+}
+
 void System::CalcParticle(EmitterInstance* emitter, CpuCore core)
+{
+    CalcParticle(emitter, core, false);
+}
+
+void System::CalcParticle(EmitterInstance* emitter, CpuCore core, bool skipMakeAttribute)
 {
     if (emitter == NULL || emitter->calc == NULL)
         return;
@@ -107,11 +150,16 @@ void System::CalcParticle(EmitterInstance* emitter, CpuCore core)
         particleEmitterPostCB(arg);
     }
 
-    mNumPtclCalc += emitter->calc->CalcParticle(emitter, core, skipBehavior, false);
+    mNumPtclCalc += emitter->calc->CalcParticle(emitter, core, skipBehavior, skipMakeAttribute);
     mEnableRenderPath[core][emitter->groupID] |= 1 << emitter->res->drawPath;
 }
 
 void System::CalcChildParticle(EmitterInstance* emitter, CpuCore core)
+{
+    CalcChildParticle(emitter, core, false);
+}
+
+void System::CalcChildParticle(EmitterInstance* emitter, CpuCore core, bool skipMakeAttribute)
 {
     if (emitter == NULL || emitter->calc == NULL || emitter->GetEmitterType() != EFT_EMITTER_TYPE_COMPLEX)
         return;
@@ -139,7 +187,7 @@ void System::CalcChildParticle(EmitterInstance* emitter, CpuCore core)
     }
 
     if (emitter->IsHasChildParticle())
-        mNumPtclCalc += emitter->calc->CalcChildParticle(emitter, core, skipBehavior, false);
+        mNumPtclCalc += emitter->calc->CalcChildParticle(emitter, core, skipBehavior, skipMakeAttribute);
 }
 
 void System::FlushCache()
@@ -160,12 +208,17 @@ void System::FlushGpuCache()
 
 void System::CalcParticle(bool cacheFlush)
 {
+    CalcParticle(cacheFlush, false);
+}
+
+void System::CalcParticle(bool cacheFlush, bool skipMakeAttribute)
+{
     for (u32 i = 0; i < EFT_GROUP_MAX; i++)
     {
         EmitterInstance* emitter = mEmitterHead[i];
         while (emitter != NULL)
         {
-            CalcParticle(emitter, EFT_CPU_CORE_1);
+            CalcParticle(emitter, EFT_CPU_CORE_1, skipMakeAttribute);
             mEnableRenderPath[EFT_CPU_CORE_1][emitter->groupID] |= 1 << emitter->res->drawPath;
 
             if (emitter->res->type == EFT_EMITTER_TYPE_COMPLEX)
@@ -174,7 +227,7 @@ void System::CalcParticle(bool cacheFlush)
                 if (res->childFlg & EFT_CHILD_FLAG_ENABLE)
                 {
                     EmitChildParticle();
-                    CalcChildParticle(emitter, EFT_CPU_CORE_1);
+                    CalcChildParticle(emitter, EFT_CPU_CORE_1, skipMakeAttribute);
                 }
             }
 

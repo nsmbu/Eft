@@ -5,6 +5,8 @@
 #include <nw/eft/eft_System.h>
 #include <nw/eft/eft_UniformBlock.h>
 
+#include <algorithm>
+
 namespace nw { namespace eft {
 
 u32 EmitterComplexCalc::CalcChildParticle(EmitterInstance* emitter, CpuCore core, bool skipBehavior, bool skipMakeAttribute)
@@ -20,7 +22,7 @@ u32 EmitterComplexCalc::CalcChildParticle(EmitterInstance* emitter, CpuCore core
         emitter->childEmitterDynamicUniformBlock = static_cast<EmitterDynamicUniformBlock*>(eftSystem->GetRenderer(core)->AllocFromDoubleBuffer(sizeof(EmitterDynamicUniformBlock)));
         if (emitter->childEmitterDynamicUniformBlock == NULL)
         {
-            emitter->ptclAttributeBuffer = NULL; // NOT childPtclAttributeBuffer... bug?
+            emitter->childPtclAttributeBuffer = NULL;
             return 0;
         }
 
@@ -65,7 +67,16 @@ u32 EmitterComplexCalc::CalcChildParticle(EmitterInstance* emitter, CpuCore core
         {
             if (!skipBehavior)
             {
-                if ((s32)ptcl->cnt >= ptcl->life || (ptcl->life == 1 && ptcl->cnt != 0.0f))
+                const f32 emitterFrameRate = emitter->frameRate;
+                f32 particleFrameRate = emitterFrameRate;
+                if (ptcl->cnt < 0.0f)
+                {
+                    particleFrameRate = std::max(0.0f, emitterFrameRate + ptcl->cnt);
+                    ptcl->cnt = 0.0f;
+                }
+
+                const f32 remainingLife = static_cast<f32>(ptcl->life) - ptcl->cnt;
+                if (remainingLife <= 0.0f)
                 {
                     RemoveParticle(emitter, ptcl, core);
                     ptcl = ptcl->next;
@@ -78,7 +89,17 @@ u32 EmitterComplexCalc::CalcChildParticle(EmitterInstance* emitter, CpuCore core
                     ptcl->emitterRT = emitter->emitterRT;
                 }
 
+                const f32 liveFrameRate = std::min(particleFrameRate, remainingLife);
+                emitter->frameRate = liveFrameRate;
                 CalcChildParticleBehavior(emitter, ptcl, core);
+                emitter->frameRate = emitterFrameRate;
+
+                if (particleFrameRate > liveFrameRate)
+                {
+                    RemoveParticle(emitter, ptcl, core);
+                    ptcl = ptcl->next;
+                    continue;
+                }
             }
 
             if (particleCB)

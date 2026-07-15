@@ -56,6 +56,7 @@ public:
     void BeginFrame();
     void SwapDoubleBuffer();
     void CalcEmitter(u8 groupID, f32 frameRate = 1.0f);
+    void CalcSimulation(u8 groupID, f32 frameRate, bool cacheFlush = true);
 
 public:
     void CalcParticle(EmitterInstance* emitter, CpuCore core);
@@ -238,6 +239,10 @@ public:
     void ReCreateEmitter(EmitterSet* set, s32 resId, s32 setId, u8 groupID);
 
 private:
+    void CalcParticle(EmitterInstance* emitter, CpuCore core, bool skipMakeAttribute);
+    void CalcChildParticle(EmitterInstance* emitter, CpuCore core, bool skipMakeAttribute);
+    void CalcParticle(bool cacheFlush, bool skipMakeAttribute);
+
     EmitterSet* AllocEmitterSet(Handle* handle);
     EmitterInstance* AllocEmitter(u8 groupID);
     void AddEmitterSetToDrawList(EmitterSet* set, u8 groupID);

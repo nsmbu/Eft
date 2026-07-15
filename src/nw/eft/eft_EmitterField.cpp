@@ -1,5 +1,9 @@
 #include <nw/math/math_Triangular.h>
 #include <nw/eft/eft_Emitter.h>
+#include <nw/eft/eft_FrameRate.h>
+
+#include <algorithm>
+#include <cmath>
 
 namespace nw { namespace eft {
 
@@ -9,12 +13,18 @@ const void* EmitterCalc::_ptclField_Random(EmitterInstance* __restrict e, PtclIn
 {
     const FieldRandomData* dat = static_cast<const FieldRandomData*>(fieldData);
 
-    if ((s32)ptcl->cnt % dat->fieldRandomBlank == 0)
+    if (dat->fieldRandomBlank > 0)
     {
-        const nw::math::VEC3& rndVec3 = e->rnd.GetVec3();
-        ptcl->vel.x += rndVec3.x * dat->fieldRandomVelAdd.x;
-        ptcl->vel.y += rndVec3.y * dat->fieldRandomVelAdd.y;
-        ptcl->vel.z += rndVec3.z * dat->fieldRandomVelAdd.z;
+        _forEachCompletedAuthoredFrame(ptcl->cnt, e->frameRate, [&](s32 frame)
+        {
+            if (frame % dat->fieldRandomBlank != 0)
+                return;
+
+            const nw::math::VEC3& rndVec3 = e->rnd.GetVec3();
+            ptcl->vel.x += rndVec3.x * dat->fieldRandomVelAdd.x;
+            ptcl->vel.y += rndVec3.y * dat->fieldRandomVelAdd.y;
+            ptcl->vel.z += rndVec3.z * dat->fieldRandomVelAdd.z;
+        });
     }
 
     return dat + 1;
@@ -24,9 +34,12 @@ const void* EmitterCalc::_ptclField_Magnet(EmitterInstance* __restrict e, PtclIn
 {
     const FieldMagnetData* dat = static_cast<const FieldMagnetData*>(fieldData);
 
-    if (dat->fieldMagnetFlg & EFT_MAGNET_FLAG_X) ptcl->vel.x += (dat->fieldMagnetPos.x - ptcl->pos.x - ptcl->vel.x) * dat->fieldMagnetPower;
-    if (dat->fieldMagnetFlg & EFT_MAGNET_FLAG_Y) ptcl->vel.y += (dat->fieldMagnetPos.y - ptcl->pos.y - ptcl->vel.y) * dat->fieldMagnetPower;
-    if (dat->fieldMagnetFlg & EFT_MAGNET_FLAG_Z) ptcl->vel.z += (dat->fieldMagnetPos.z - ptcl->pos.z - ptcl->vel.z) * dat->fieldMagnetPower;
+    const f32 power = dat->fieldMagnetPower == 1.0f
+                    ? 1.0f
+                    : 1.0f - std::pow(std::max(0.0f, 1.0f - dat->fieldMagnetPower), e->frameRate);
+    if (dat->fieldMagnetFlg & EFT_MAGNET_FLAG_X) ptcl->vel.x += (dat->fieldMagnetPos.x - ptcl->pos.x - ptcl->vel.x) * power;
+    if (dat->fieldMagnetFlg & EFT_MAGNET_FLAG_Y) ptcl->vel.y += (dat->fieldMagnetPos.y - ptcl->pos.y - ptcl->vel.y) * power;
+    if (dat->fieldMagnetFlg & EFT_MAGNET_FLAG_Z) ptcl->vel.z += (dat->fieldMagnetPos.z - ptcl->pos.z - ptcl->vel.z) * power;
 
     return dat + 1;
 }
@@ -55,7 +68,7 @@ const void* EmitterCalc::_ptclField_Spin(EmitterInstance* __restrict e, PtclInst
             if (length2 <= 0.0f)
                 return dat + 1;
 
-            f32 r = 1.0f / nw::math::FSqrt(length2) * dat->fieldSpinOuter * ptcl->dynamicsRnd * e->frameRate; // " * e->frameRate " <-- mistake?
+            f32 r = 1.0f / nw::math::FSqrt(length2) * dat->fieldSpinOuter * ptcl->dynamicsRnd;
             ptcl->pos.y += v0 * r * e->frameRate;
             ptcl->pos.z += v1 * r * e->frameRate;
             return dat + 1;
@@ -200,9 +213,11 @@ const void* EmitterCalc::_ptclField_Convergence(EmitterInstance* __restrict e, P
 {
     const FieldConvergenceData* dat = static_cast<const FieldConvergenceData*>(fieldData);
 
-    ptcl->pos.x += (dat->fieldConvergencePos.x - ptcl->pos.x) * dat->fieldConvergenceRatio * ptcl->dynamicsRnd * e->frameRate;
-    ptcl->pos.y += (dat->fieldConvergencePos.y - ptcl->pos.y) * dat->fieldConvergenceRatio * ptcl->dynamicsRnd * e->frameRate;
-    ptcl->pos.z += (dat->fieldConvergencePos.z - ptcl->pos.x) * dat->fieldConvergenceRatio * ptcl->dynamicsRnd * e->frameRate;
+    const f32 perFrameRatio = dat->fieldConvergenceRatio * ptcl->dynamicsRnd;
+    const f32 ratio = 1.0f - std::pow(std::max(0.0f, 1.0f - perFrameRatio), e->frameRate);
+    ptcl->pos.x += (dat->fieldConvergencePos.x - ptcl->pos.x) * ratio;
+    ptcl->pos.y += (dat->fieldConvergencePos.y - ptcl->pos.y) * ratio;
+    ptcl->pos.z += (dat->fieldConvergencePos.z - ptcl->pos.x) * ratio;
 
     return dat + 1;
 }

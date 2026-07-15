@@ -4,6 +4,8 @@
 #include <nw/eft/eft_System.h>
 #include <nw/eft/eft_UniformBlock.h>
 
+#include <algorithm>
+
 namespace nw { namespace eft {
 
 void EmitterComplexCalc::CalcEmitter(EmitterInstance* e)
@@ -16,7 +18,7 @@ void EmitterComplexCalc::CalcComplex(EmitterInstance* e, PtclInstance* ptcl, Cpu
     const ComplexEmitterData* __restrict res  = static_cast<const ComplexEmitterData*>(e->res);
     const ChildData*          __restrict cres = reinterpret_cast<const ChildData*>(res + 1);
 
-    s32 cnt = (s32)ptcl->cnt - 1;
+    const f32 cnt = ptcl->cnt - e->frameRate;
 
     if (res->billboardType == EFT_BILLBOARD_TYPE_STRIPE)
     {
@@ -25,6 +27,11 @@ void EmitterComplexCalc::CalcComplex(EmitterInstance* e, PtclInstance* ptcl, Cpu
         if (ptcl->stripe)
         {
             PtclStripe* stripe = ptcl->stripe;
+            stripe->frameAccumulator += e->frameRate;
+
+            while (stripe->frameAccumulator >= 1.0f)
+            {
+                stripe->frameAccumulator -= 1.0f;
 
             PtclStripeHistory* histNow = &stripe->hist[stripe->histQEnd];
 
@@ -119,49 +126,33 @@ void EmitterComplexCalc::CalcComplex(EmitterInstance* e, PtclInstance* ptcl, Cpu
 
             stripe->emitterSRT = e->emitterSRT;
             stripe->cnt++;
+            }
         }
     }
 
     if (res->childFlg & EFT_CHILD_FLAG_ENABLE)
     {
-        s32 emitTime = (ptcl->life - 1) * cres->childEmitTiming / 100;
+        const f32 emitTime = static_cast<f32>((ptcl->life - 1) * cres->childEmitTiming / 100);
         if (cnt >= emitTime)
         {
-            if (ptcl->childEmitCnt >= cres->childEmitStep || (cres->childEmitStep == 0 && cres->childLife == 1))
+            s32 loop = 0;
+            if (ptcl->childEmitCnt >= 1000000.0f)
             {
-                s32 loop = 1;
-
-                if (ptcl->childPreEmitCnt > 0.0f)
-                {
-                    if (cres->childEmitStep != 0)
-                    {
-                        loop = (s32)((e->cnt - ptcl->childPreEmitCnt + ptcl->childEmitSaving) / cres->childEmitStep);
-
-                        if (ptcl->childEmitSaving >= cres->childEmitStep)
-                            ptcl->childEmitSaving -= cres->childEmitStep;
-
-                        ptcl->childEmitSaving += e->cnt - ptcl->childPreEmitCnt - loop;
-                    }
-                    else
-                    {
-                        loop = (s32)(e->cnt - ptcl->childPreEmitCnt + ptcl->childEmitSaving);
-
-                        if (ptcl->childEmitSaving >= cres->childEmitStep)
-                            ptcl->childEmitSaving -= cres->childEmitStep;
-
-                        ptcl->childEmitSaving += e->cnt - ptcl->childPreEmitCnt - loop;
-                    }
-                }
-
-                mSys->AddPtclAdditionList(ptcl, core);
-
+                loop = 1;
                 ptcl->childEmitCnt = 0.0f;
-                ptcl->childPreEmitCnt = e->cnt;
             }
             else
             {
+                const f32 period = cres->childEmitStep == 0
+                                 ? 1.0f
+                                 : static_cast<f32>(cres->childEmitStep + 1);
                 ptcl->childEmitCnt += e->frameRate;
+                loop = static_cast<s32>(ptcl->childEmitCnt / period);
+                ptcl->childEmitCnt -= static_cast<f32>(loop) * period;
             }
+
+            for (s32 i = 0; i < loop; ++i)
+                mSys->AddPtclAdditionList(ptcl, core);
         }
     }
 }
@@ -267,23 +258,43 @@ u32 EmitterComplexCalc::CalcParticle(EmitterInstance* emitter, CpuCore core, boo
     {
         while (ptcl)
         {
-            s32 cntS = (s32)ptcl->cnt;
-
             if (ptcl->res)
             {
-                if (cntS >= ptcl->life || (ptcl->life == 1 && ptcl->cnt != 0.0f))
+                const f32 emitterFrameRate = emitter->frameRate;
+                f32 particleFrameRate = emitterFrameRate;
+                if (ptcl->cnt < 0.0f)
                 {
+                    particleFrameRate = std::max(0.0f, emitterFrameRate + ptcl->cnt);
+                    ptcl->cnt = 0.0f;
+                }
+
+                if (ptcl->cnt + particleFrameRate > static_cast<f32>(ptcl->life))
+                {
+                    const f32 liveFrameRate = std::max(0.0f,
+                        static_cast<f32>(ptcl->life) - ptcl->cnt);
+                    if (liveFrameRate > 0.0f)
+                    {
+                        emitter->frameRate = liveFrameRate;
+                        CalcComplexParticleBehavior(emitter, ptcl, core);
+                        CalcComplex(emitter, ptcl, core);
+                        emitter->frameRate = emitterFrameRate;
+                    }
+
                     PtclStripe* stripe = ptcl->stripe;
                     if (stripe)
                     {
                         const StripeData* sres = reinterpret_cast<const StripeData*>((uintptr_t)res + res->stripeDataOffset);
+                        const f32 postLifeTime = particleFrameRate - liveFrameRate;
+                        stripe->frameAccumulator += postLifeTime;
+                        while (stripe->frameAccumulator >= 1.0f)
+                        {
+                            stripe->frameAccumulator -= 1.0f;
+                            if (stripe->histQStart == stripe->histQEnd)
+                            {
+                                RemoveParticle(emitter, ptcl, core);
+                                break;
+                            }
 
-                        if (stripe->histQStart == stripe->histQEnd)
-                        {
-                            RemoveParticle(emitter, ptcl, core);
-                        }
-                        else
-                        {
                             stripe->histQStart++;
                             if (stripe->histQStart >= sres->stripeNumHistory)
                                 stripe->histQStart = 0;
@@ -305,9 +316,8 @@ u32 EmitterComplexCalc::CalcParticle(EmitterInstance* emitter, CpuCore core, boo
                             ptcl->uvSubRotateZ  += res->textureData[1].uvRot;
 
                             emitter->entryNum++;
+                            stripe->cnt++;
                         }
-
-                        stripe->cnt++;
                     }
                     else
                     {
@@ -316,8 +326,10 @@ u32 EmitterComplexCalc::CalcParticle(EmitterInstance* emitter, CpuCore core, boo
                 }
                 else
                 {
+                    emitter->frameRate = particleFrameRate;
                     CalcComplexParticleBehavior(emitter, ptcl, core);
                     CalcComplex(emitter, ptcl, core);
+                    emitter->frameRate = emitterFrameRate;
 
                     if (particleCB)
                     {
@@ -351,7 +363,7 @@ u32 EmitterComplexCalc::CalcParticle(EmitterInstance* emitter, CpuCore core, boo
         }
     }
 
-    if (res->billboardType == EFT_BILLBOARD_TYPE_STRIPE)
+    if (res->billboardType == EFT_BILLBOARD_TYPE_STRIPE && !skipMakeAttribute)
         eftSystem->GetRenderer(core)->MakeStripeAttributeBlock(emitter);
 
     emitter->isCalculated = true;

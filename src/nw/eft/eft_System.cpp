@@ -357,6 +357,9 @@ void System::RemovePtcl()
 
 void System::AddPtclRemoveList(PtclInstance* ptcl, CpuCore core)
 {
+    if (ptcl == NULL || mPtclRemoveIdx[core] >= static_cast<u32>(mNumPtclData))
+        return;
+
     mPtclRemoveArray[core][mPtclRemoveIdx[core]] = ptcl;
     mPtclRemoveIdx[core]++;
 
@@ -382,7 +385,7 @@ void System::EmitChildParticle()
 
 void System::AddPtclAdditionList(PtclInstance* ptcl, CpuCore core)
 {
-    if (mPtclAdditionIdx[core] > mNumPtclData)
+    if (ptcl == NULL || mPtclAdditionIdx[core] >= mNumPtclData)
         return;
 
     mPtclAdditionArray[core][mPtclAdditionIdx[core]] = ptcl;
@@ -420,6 +423,7 @@ PtclStripe* System::AllocAndConnectStripe(EmitterInstance* emitter, PtclInstance
             stripe->res        = static_cast<const ComplexEmitterData*>(emitter->res);
             stripe->groupID    = emitter->groupID;
             stripe->cnt        = 0;
+            stripe->frameAccumulator = 0.0f;
             stripe->hist[0].outer = nw::math::VEC3::Zero();
 
             return stripe;

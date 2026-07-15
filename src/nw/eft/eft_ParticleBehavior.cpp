@@ -1,6 +1,9 @@
 #include <nw/eft/eft_Emitter.h>
 #include <nw/eft/eft_EmitterSet.h>
+#include <nw/eft/eft_FrameRate.h>
 #include <nw/eft/eft_UniformBlock.h>
+
+#include <cmath>
 
 #if EFT_IS_CAFE_WUT || !EFT_IS_CAFE
 #pragma GCC diagnostic push
@@ -13,7 +16,7 @@ namespace nw { namespace eft {
 
 static inline void _calcTexPatAnim(PtclInstance* ptcl, const TextureEmitterData* textureData)
 {
-    s32 cnt = (s32)ptcl->cnt;
+    s32 cnt = static_cast<s32>(ptcl->cnt);
     u32 patIx;
 
     // Four animation types:
@@ -55,7 +58,7 @@ static inline void _calcTexPatAnim(PtclInstance* ptcl, const TextureEmitterData*
 
 static inline void _calcSubTexPatAnim(PtclInstance* ptcl, const TextureEmitterData* textureData)
 {
-    s32 cnt = (s32)ptcl->cnt;
+    s32 cnt = static_cast<s32>(ptcl->cnt);
     u32 patIx;
 
     // Four animation types:
@@ -97,7 +100,7 @@ static inline void _calcSubTexPatAnim(PtclInstance* ptcl, const TextureEmitterDa
 
 static inline void _calcChildTexPatAnim(const ComplexEmitterData* __restrict res, const ChildData* __restrict cres, PtclInstance* __restrict ptcl)
 {
-    s32 cnt = (s32)ptcl->cnt;
+    s32 cnt = static_cast<s32>(ptcl->cnt);
     u32 patIx;
 
     // Four animation types:
@@ -143,7 +146,7 @@ static inline void _interpolate3Colors(const SimpleEmitterData* __restrict res, 
     if (freq == 0)
         freq = ptcl->life;
 
-    s32 localCnt = (s32)ptcl->cnt - 1;
+    s32 localCnt = static_cast<s32>(ptcl->cnt) - 1;
     if (res->colorRepeatStartRand[kind]) localCnt += ptcl->rnd >> 6;
     localCnt %= freq;
 
@@ -159,7 +162,7 @@ static inline void _interpolate3Colors(const SimpleEmitterData* __restrict res, 
         s32 sec2 = (res->colorSection2[kind] * freq) / 100;
         if (localCnt < sec2)
         {
-            f32 t = (f32)(localCnt - sec1) / (f32)(sec2 - sec1);
+            f32 t = static_cast<f32>(localCnt - sec1) / static_cast<f32>(sec2 - sec1);
 
             f32 val1 = res->color[kind][1].r - res->color[kind][0].r;
             f32 val2 = res->color[kind][1].g - res->color[kind][0].g;
@@ -174,7 +177,7 @@ static inline void _interpolate3Colors(const SimpleEmitterData* __restrict res, 
             s32 sec3 = (res->colorSection3[kind] * freq) / 100;
             if (localCnt < sec3)
             {
-                f32 t = (f32)(localCnt - sec2) / (f32)(sec3 - sec2);
+                f32 t = static_cast<f32>(localCnt - sec2) / static_cast<f32>(sec3 - sec2);
 
                 f32 val1 = res->color[kind][2].r - res->color[kind][1].r;
                 f32 val2 = res->color[kind][2].g - res->color[kind][1].g;
@@ -198,7 +201,7 @@ u32 EmitterCalc::CalcSimpleParticleBehavior(EmitterInstance* __restrict e, PtclI
 {
     const SimpleEmitterData* __restrict res = e->res;
 
-    s32 cnt = (s32)ptcl->cnt;
+    f32 cnt = ptcl->cnt;
 
     nw::math::MTX34* mrt  = ptcl->coordinateEmitterRT;
     nw::math::MTX34* msrt = ptcl->coordinateEmitterSRT;
@@ -206,8 +209,6 @@ u32 EmitterCalc::CalcSimpleParticleBehavior(EmitterInstance* __restrict e, PtclI
     f32 old_pos_x = ptcl->pos.x;
     f32 old_pos_y = ptcl->pos.y;
     f32 old_pos_z = ptcl->pos.z;
-
-    f32 invRatio = 1.0f - e->frameRate;
 
     if (e->followType == EFT_FOLLOW_TYPE_POS_ONLY)
     {
@@ -219,73 +220,54 @@ u32 EmitterCalc::CalcSimpleParticleBehavior(EmitterInstance* __restrict e, PtclI
         ptcl->emitterRT .m[2][3] = e->emitterRT .m[2][3];
     }
 
-    ptcl->pos.x += ptcl->vel.x * ptcl->dynamicsRnd * e->frameRate;
-    ptcl->pos.y += ptcl->vel.y * ptcl->dynamicsRnd * e->frameRate;
-    ptcl->pos.z += ptcl->vel.z * ptcl->dynamicsRnd * e->frameRate;
-
-    if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_AIR_REGIST)
-    {
-        f32 airRegist = res->airRegist + (1.0f - res->airRegist) * invRatio;
-        ptcl->vel.x *= airRegist;
-        ptcl->vel.y *= airRegist;
-        ptcl->vel.z *= airRegist;
-    }
-
+    const f32 damping = (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_AIR_REGIST)
+                      ? res->airRegist : 1.0f;
+    nw::math::VEC3 acceleration = nw::math::VEC3::Zero();
     if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_GRAVITY)
     {
         if (res->isWorldGravity)
         {
-            ptcl->vel.x +=  res->gravity.x * e->frameRate * mrt->m[0][0] +
-                            res->gravity.y * e->frameRate * mrt->m[1][0] +
-                            res->gravity.z * e->frameRate * mrt->m[2][0];
-            ptcl->vel.y +=  res->gravity.x * e->frameRate * mrt->m[0][1] +
-                            res->gravity.y * e->frameRate * mrt->m[1][1] +
-                            res->gravity.z * e->frameRate * mrt->m[2][1];
-            ptcl->vel.z +=  res->gravity.x * e->frameRate * mrt->m[0][2] +
-                            res->gravity.y * e->frameRate * mrt->m[1][2] +
-                            res->gravity.z * e->frameRate * mrt->m[2][2];
+            acceleration.x = res->gravity.x * mrt->m[0][0] + res->gravity.y * mrt->m[1][0] + res->gravity.z * mrt->m[2][0];
+            acceleration.y = res->gravity.x * mrt->m[0][1] + res->gravity.y * mrt->m[1][1] + res->gravity.z * mrt->m[2][1];
+            acceleration.z = res->gravity.x * mrt->m[0][2] + res->gravity.y * mrt->m[1][2] + res->gravity.z * mrt->m[2][2];
         }
         else
         {
-            ptcl->vel.x += res->gravity.x * e->frameRate;
-            ptcl->vel.y += res->gravity.y * e->frameRate;
-            ptcl->vel.z += res->gravity.z * e->frameRate;
+            acceleration = res->gravity;
         }
     }
+    _integrateAxis(ptcl->pos.x, ptcl->vel.x, acceleration.x, damping, ptcl->dynamicsRnd, cnt, e->frameRate);
+    _integrateAxis(ptcl->pos.y, ptcl->vel.y, acceleration.y, damping, ptcl->dynamicsRnd, cnt, e->frameRate);
+    _integrateAxis(ptcl->pos.z, ptcl->vel.z, acceleration.z, damping, ptcl->dynamicsRnd, cnt, e->frameRate);
 
     if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_ALPHA_ANIM)
     {
-        if (cnt <= ptcl->alphaAnim->alphaSec1)
-            ptcl->alpha += ptcl->alphaAnim->alphaAddSec1 * e->frameRate;
-
-        else if (cnt > ptcl->alphaAnim->alphaSec2)
-            ptcl->alpha += ptcl->alphaAnim->alphaAddSec2 * e->frameRate;
+        _accumulateSection(ptcl->alpha, ptcl->alphaAnim->alphaAddSec1,
+            _sectionOverlap(cnt, e->frameRate, 0.0f, ptcl->alphaAnim->alphaSec1 + 1.0f));
+        _accumulateSection(ptcl->alpha, ptcl->alphaAnim->alphaAddSec2,
+            _sectionOverlap(cnt, e->frameRate, ptcl->alphaAnim->alphaSec2 + 1.0f, static_cast<f32>(ptcl->life)));
     }
 
     if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_SCALE_ANIM)
     {
-        if (cnt <= ptcl->scaleAnim->scaleSec1)
-        {
-            ptcl->scale.x += ptcl->scaleAnim->scaleAddSec1.x * e->frameRate;
-            ptcl->scale.y += ptcl->scaleAnim->scaleAddSec1.y * e->frameRate;
-        }
-        else if (cnt > ptcl->scaleAnim->scaleSec2)
-        {
-            ptcl->scale.x += ptcl->scaleAnim->scaleAddSec2.x * e->frameRate;
-            ptcl->scale.y += ptcl->scaleAnim->scaleAddSec2.y * e->frameRate;
-        }
+        const f32 section1Time = _sectionOverlap(cnt, e->frameRate, 0.0f, ptcl->scaleAnim->scaleSec1 + 1.0f);
+        const f32 section2Time = _sectionOverlap(cnt, e->frameRate, ptcl->scaleAnim->scaleSec2 + 1.0f, static_cast<f32>(ptcl->life));
+        _accumulateSection(ptcl->scale.x, ptcl->scaleAnim->scaleAddSec1.x, section1Time);
+        _accumulateSection(ptcl->scale.y, ptcl->scaleAnim->scaleAddSec1.y, section1Time);
+        _accumulateSection(ptcl->scale.x, ptcl->scaleAnim->scaleAddSec2.x, section2Time);
+        _accumulateSection(ptcl->scale.y, ptcl->scaleAnim->scaleAddSec2.y, section2Time);
     }
 
     if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_ROTATE)
     {
-        ptcl->rot.x += ptcl->rotVel.x * e->frameRate;
-        ptcl->rot.y += ptcl->rotVel.y * e->frameRate;
-        ptcl->rot.z += ptcl->rotVel.z * e->frameRate;
+        const f32 damping = (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_ROT_REGIST) ? res->rotRegist : 1.0f;
+        _integrateAxis(ptcl->rot.x, ptcl->rotVel.x, 0.0f, damping, 1.0f, cnt, e->frameRate);
+        _integrateAxis(ptcl->rot.y, ptcl->rotVel.y, 0.0f, damping, 1.0f, cnt, e->frameRate);
+        _integrateAxis(ptcl->rot.z, ptcl->rotVel.z, 0.0f, damping, 1.0f, cnt, e->frameRate);
     }
-
-    if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_ROT_REGIST)
+    else if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_ROT_REGIST)
     {
-        f32 rotRegist = res->rotRegist + (1.0f - res->rotRegist) * invRatio;
+        f32 rotRegist = _scaledMultiplier(res->rotRegist, cnt, e->frameRate);
         ptcl->rotVel.x *= rotRegist;
         ptcl->rotVel.y *= rotRegist;
         ptcl->rotVel.z *= rotRegist;
@@ -331,10 +313,11 @@ u32 EmitterCalc::CalcSimpleParticleBehavior(EmitterInstance* __restrict e, PtclI
     if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_WLD_POSDIF)
     {
         #define POSDIFF_MIN_VEL 0.0001f
+        const f32 invFrameRate = e->frameRate > 0.0f ? 1.0f / e->frameRate : 0.0f;
         nw::math::VEC3 vel;
-        vel.x =  ptcl->pos.x - old_pos_x;
-        vel.y =  ptcl->pos.y - old_pos_y;
-        vel.z =  ptcl->pos.z - old_pos_z;
+        vel.x = (ptcl->pos.x - old_pos_x) * invFrameRate;
+        vel.y = (ptcl->pos.y - old_pos_y) * invFrameRate;
+        vel.z = (ptcl->pos.z - old_pos_z) * invFrameRate;
 
         if (std::fabs(vel.x) > POSDIFF_MIN_VEL ||
             std::fabs(vel.y) > POSDIFF_MIN_VEL ||
@@ -345,15 +328,9 @@ u32 EmitterCalc::CalcSimpleParticleBehavior(EmitterInstance* __restrict e, PtclI
             ptcl->posDiff.z += vel.z - ptcl->posDiff.z;
         }
 
-        ptcl->worldPosDiff.x =  msrt->m[0][0] * ptcl->posDiff.x * e->frameRate +
-                                msrt->m[0][1] * ptcl->posDiff.y * e->frameRate +
-                                msrt->m[0][2] * ptcl->posDiff.z * e->frameRate;
-        ptcl->worldPosDiff.y =  msrt->m[1][0] * ptcl->posDiff.x * e->frameRate +
-                                msrt->m[1][1] * ptcl->posDiff.y * e->frameRate +
-                                msrt->m[1][2] * ptcl->posDiff.z * e->frameRate;
-        ptcl->worldPosDiff.z =  msrt->m[2][0] * ptcl->posDiff.x * e->frameRate +
-                                msrt->m[2][1] * ptcl->posDiff.y * e->frameRate +
-                                msrt->m[2][2] * ptcl->posDiff.z * e->frameRate;
+        ptcl->worldPosDiff.x = msrt->m[0][0] * ptcl->posDiff.x + msrt->m[0][1] * ptcl->posDiff.y + msrt->m[0][2] * ptcl->posDiff.z;
+        ptcl->worldPosDiff.y = msrt->m[1][0] * ptcl->posDiff.x + msrt->m[1][1] * ptcl->posDiff.y + msrt->m[1][2] * ptcl->posDiff.z;
+        ptcl->worldPosDiff.z = msrt->m[2][0] * ptcl->posDiff.x + msrt->m[2][1] * ptcl->posDiff.y + msrt->m[2][2] * ptcl->posDiff.z;
     }
 
     ptcl->cnt += e->frameRate;
@@ -364,7 +341,7 @@ u32 EmitterCalc::CalcComplexParticleBehavior(EmitterInstance* __restrict e, Ptcl
 {
     const ComplexEmitterData* __restrict res = static_cast<const ComplexEmitterData*>(e->res);
 
-    s32 cnt = (s32)ptcl->cnt;
+    f32 cnt = ptcl->cnt;
 
     nw::math::MTX34* mrt  = ptcl->coordinateEmitterRT;
     nw::math::MTX34* msrt = ptcl->coordinateEmitterSRT;
@@ -372,8 +349,6 @@ u32 EmitterCalc::CalcComplexParticleBehavior(EmitterInstance* __restrict e, Ptcl
     f32 old_pos_x = ptcl->pos.x;
     f32 old_pos_y = ptcl->pos.y;
     f32 old_pos_z = ptcl->pos.z;
-
-    f32 invRatio = 1.0f - e->frameRate;
 
     if (e->followType == EFT_FOLLOW_TYPE_POS_ONLY)
     {
@@ -385,73 +360,54 @@ u32 EmitterCalc::CalcComplexParticleBehavior(EmitterInstance* __restrict e, Ptcl
         ptcl->emitterRT .m[2][3] = e->emitterRT .m[2][3];
     }
 
-    ptcl->pos.x += ptcl->vel.x * ptcl->dynamicsRnd * e->frameRate;
-    ptcl->pos.y += ptcl->vel.y * ptcl->dynamicsRnd * e->frameRate;
-    ptcl->pos.z += ptcl->vel.z * ptcl->dynamicsRnd * e->frameRate;
-
-    if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_AIR_REGIST)
-    {
-        f32 airRegist = res->airRegist + (1.0f - res->airRegist) * invRatio;
-        ptcl->vel.x *= airRegist;
-        ptcl->vel.y *= airRegist;
-        ptcl->vel.z *= airRegist;
-    }
-
+    const f32 damping = (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_AIR_REGIST)
+                      ? res->airRegist : 1.0f;
+    nw::math::VEC3 acceleration = nw::math::VEC3::Zero();
     if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_GRAVITY)
     {
         if (res->isWorldGravity)
         {
-            ptcl->vel.x +=  res->gravity.x * e->frameRate * mrt->m[0][0] +
-                            res->gravity.y * e->frameRate * mrt->m[1][0] +
-                            res->gravity.z * e->frameRate * mrt->m[2][0];
-            ptcl->vel.y +=  res->gravity.x * e->frameRate * mrt->m[0][1] +
-                            res->gravity.y * e->frameRate * mrt->m[1][1] +
-                            res->gravity.z * e->frameRate * mrt->m[2][1];
-            ptcl->vel.z +=  res->gravity.x * e->frameRate * mrt->m[0][2] +
-                            res->gravity.y * e->frameRate * mrt->m[1][2] +
-                            res->gravity.z * e->frameRate * mrt->m[2][2];
+            acceleration.x = res->gravity.x * mrt->m[0][0] + res->gravity.y * mrt->m[1][0] + res->gravity.z * mrt->m[2][0];
+            acceleration.y = res->gravity.x * mrt->m[0][1] + res->gravity.y * mrt->m[1][1] + res->gravity.z * mrt->m[2][1];
+            acceleration.z = res->gravity.x * mrt->m[0][2] + res->gravity.y * mrt->m[1][2] + res->gravity.z * mrt->m[2][2];
         }
         else
         {
-            ptcl->vel.x += res->gravity.x * e->frameRate;
-            ptcl->vel.y += res->gravity.y * e->frameRate;
-            ptcl->vel.z += res->gravity.z * e->frameRate;
+            acceleration = res->gravity;
         }
     }
+    _integrateAxis(ptcl->pos.x, ptcl->vel.x, acceleration.x, damping, ptcl->dynamicsRnd, cnt, e->frameRate);
+    _integrateAxis(ptcl->pos.y, ptcl->vel.y, acceleration.y, damping, ptcl->dynamicsRnd, cnt, e->frameRate);
+    _integrateAxis(ptcl->pos.z, ptcl->vel.z, acceleration.z, damping, ptcl->dynamicsRnd, cnt, e->frameRate);
 
     if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_ALPHA_ANIM)
     {
-        if (cnt <= ptcl->alphaAnim->alphaSec1)
-            ptcl->alpha += ptcl->alphaAnim->alphaAddSec1 * e->frameRate;
-
-        else if (cnt > ptcl->alphaAnim->alphaSec2)
-            ptcl->alpha += ptcl->alphaAnim->alphaAddSec2 * e->frameRate;
+        _accumulateSection(ptcl->alpha, ptcl->alphaAnim->alphaAddSec1,
+            _sectionOverlap(cnt, e->frameRate, 0.0f, ptcl->alphaAnim->alphaSec1 + 1.0f));
+        _accumulateSection(ptcl->alpha, ptcl->alphaAnim->alphaAddSec2,
+            _sectionOverlap(cnt, e->frameRate, ptcl->alphaAnim->alphaSec2 + 1.0f, static_cast<f32>(ptcl->life)));
     }
 
     if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_SCALE_ANIM)
     {
-        if (cnt <= ptcl->scaleAnim->scaleSec1)
-        {
-            ptcl->scale.x += ptcl->scaleAnim->scaleAddSec1.x * e->frameRate;
-            ptcl->scale.y += ptcl->scaleAnim->scaleAddSec1.y * e->frameRate;
-        }
-        else if (cnt > ptcl->scaleAnim->scaleSec2)
-        {
-            ptcl->scale.x += ptcl->scaleAnim->scaleAddSec2.x * e->frameRate;
-            ptcl->scale.y += ptcl->scaleAnim->scaleAddSec2.y * e->frameRate;
-        }
+        const f32 section1Time = _sectionOverlap(cnt, e->frameRate, 0.0f, ptcl->scaleAnim->scaleSec1 + 1.0f);
+        const f32 section2Time = _sectionOverlap(cnt, e->frameRate, ptcl->scaleAnim->scaleSec2 + 1.0f, static_cast<f32>(ptcl->life));
+        _accumulateSection(ptcl->scale.x, ptcl->scaleAnim->scaleAddSec1.x, section1Time);
+        _accumulateSection(ptcl->scale.y, ptcl->scaleAnim->scaleAddSec1.y, section1Time);
+        _accumulateSection(ptcl->scale.x, ptcl->scaleAnim->scaleAddSec2.x, section2Time);
+        _accumulateSection(ptcl->scale.y, ptcl->scaleAnim->scaleAddSec2.y, section2Time);
     }
 
     if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_ROTATE)
     {
-        ptcl->rot.x += ptcl->rotVel.x * e->frameRate;
-        ptcl->rot.y += ptcl->rotVel.y * e->frameRate;
-        ptcl->rot.z += ptcl->rotVel.z * e->frameRate;
+        const f32 damping = (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_ROT_REGIST) ? res->rotRegist : 1.0f;
+        _integrateAxis(ptcl->rot.x, ptcl->rotVel.x, 0.0f, damping, 1.0f, cnt, e->frameRate);
+        _integrateAxis(ptcl->rot.y, ptcl->rotVel.y, 0.0f, damping, 1.0f, cnt, e->frameRate);
+        _integrateAxis(ptcl->rot.z, ptcl->rotVel.z, 0.0f, damping, 1.0f, cnt, e->frameRate);
     }
-
-    if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_ROT_REGIST)
+    else if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_ROT_REGIST)
     {
-        f32 rotRegist = res->rotRegist + (1.0f - res->rotRegist) * invRatio;
+        f32 rotRegist = _scaledMultiplier(res->rotRegist, cnt, e->frameRate);
         ptcl->rotVel *= rotRegist;
     }
 
@@ -495,10 +451,11 @@ u32 EmitterCalc::CalcComplexParticleBehavior(EmitterInstance* __restrict e, Ptcl
         _calcField(res, e, ptcl);
 
     #define POSDIFF_MIN_VEL 0.0001f
+    const f32 invFrameRate = e->frameRate > 0.0f ? 1.0f / e->frameRate : 0.0f;
     nw::math::VEC3 vel;
-    vel.x =  ptcl->pos.x - old_pos_x;
-    vel.y =  ptcl->pos.y - old_pos_y;
-    vel.z =  ptcl->pos.z - old_pos_z;
+    vel.x = (ptcl->pos.x - old_pos_x) * invFrameRate;
+    vel.y = (ptcl->pos.y - old_pos_y) * invFrameRate;
+    vel.z = (ptcl->pos.z - old_pos_z) * invFrameRate;
     if (std::fabs(vel.x) > POSDIFF_MIN_VEL ||
         std::fabs(vel.y) > POSDIFF_MIN_VEL ||
         std::fabs(vel.z) > POSDIFF_MIN_VEL)
@@ -514,15 +471,9 @@ u32 EmitterCalc::CalcComplexParticleBehavior(EmitterInstance* __restrict e, Ptcl
 
     if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_WLD_POSDIF)
     {
-        ptcl->worldPosDiff.x =  msrt->m[0][0] * ptcl->posDiff.x * e->frameRate +
-                                msrt->m[0][1] * ptcl->posDiff.y * e->frameRate +
-                                msrt->m[0][2] * ptcl->posDiff.z * e->frameRate;
-        ptcl->worldPosDiff.y =  msrt->m[1][0] * ptcl->posDiff.x * e->frameRate +
-                                msrt->m[1][1] * ptcl->posDiff.y * e->frameRate +
-                                msrt->m[1][2] * ptcl->posDiff.z * e->frameRate;
-        ptcl->worldPosDiff.z =  msrt->m[2][0] * ptcl->posDiff.x * e->frameRate +
-                                msrt->m[2][1] * ptcl->posDiff.y * e->frameRate +
-                                msrt->m[2][2] * ptcl->posDiff.z * e->frameRate;
+        ptcl->worldPosDiff.x = msrt->m[0][0] * ptcl->posDiff.x + msrt->m[0][1] * ptcl->posDiff.y + msrt->m[0][2] * ptcl->posDiff.z;
+        ptcl->worldPosDiff.y = msrt->m[1][0] * ptcl->posDiff.x + msrt->m[1][1] * ptcl->posDiff.y + msrt->m[1][2] * ptcl->posDiff.z;
+        ptcl->worldPosDiff.z = msrt->m[2][0] * ptcl->posDiff.x + msrt->m[2][1] * ptcl->posDiff.y + msrt->m[2][2] * ptcl->posDiff.z;
     }
 
     ptcl->cnt += e->frameRate;
@@ -534,7 +485,7 @@ u32 EmitterCalc::CalcChildParticleBehavior(EmitterInstance* __restrict e, PtclIn
     const ComplexEmitterData* __restrict res  = static_cast<const ComplexEmitterData*>(ptcl->res);
     const ChildData*          __restrict cres = reinterpret_cast<const ChildData*>(res + 1);
 
-    s32 cnt = (s32)ptcl->cnt;
+    f32 cnt = ptcl->cnt;
 
     nw::math::MTX34* mrt  = ptcl->coordinateEmitterRT;
     nw::math::MTX34* msrt = ptcl->coordinateEmitterSRT;
@@ -543,72 +494,41 @@ u32 EmitterCalc::CalcChildParticleBehavior(EmitterInstance* __restrict e, PtclIn
     f32 old_pos_y = ptcl->pos.y;
     f32 old_pos_z = ptcl->pos.z;
 
-    f32 invRatio = 1.0f - e->frameRate;
-
-    ptcl->pos.x += ptcl->vel.x * ptcl->dynamicsRnd * e->frameRate;
-    ptcl->pos.y += ptcl->vel.y * ptcl->dynamicsRnd * e->frameRate;
-    ptcl->pos.z += ptcl->vel.z * ptcl->dynamicsRnd * e->frameRate;
-
-    //if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_AIR_REGIST)
-    //{
-        f32 airRegist = cres->childAirRegist + (1.0f - res->airRegist) * invRatio; // No idea why it uses res->airRegist, mistake?
-        ptcl->vel.x *= airRegist;
-        ptcl->vel.y *= airRegist;
-        ptcl->vel.z *= airRegist;
-    //}
-
-    //if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_GRAVITY)
-    //{
-        if (res->isWorldGravity)
-        {
-            ptcl->vel.x +=  cres->childGravity.x * e->frameRate * mrt->m[0][0] +
-                            cres->childGravity.y * e->frameRate * mrt->m[1][0] +
-                            cres->childGravity.z * e->frameRate * mrt->m[2][0];
-            ptcl->vel.y +=  cres->childGravity.x * e->frameRate * mrt->m[0][1] +
-                            cres->childGravity.y * e->frameRate * mrt->m[1][1] +
-                            cres->childGravity.z * e->frameRate * mrt->m[2][1];
-            ptcl->vel.z +=  cres->childGravity.x * e->frameRate * mrt->m[0][2] +
-                            cres->childGravity.y * e->frameRate * mrt->m[1][2] +
-                            cres->childGravity.z * e->frameRate * mrt->m[2][2];
-        }
-        else
-        {
-            ptcl->vel.x += cres->childGravity.x * e->frameRate;
-            ptcl->vel.y += cres->childGravity.y * e->frameRate;
-            ptcl->vel.z += cres->childGravity.z * e->frameRate;
-        }
-    //}
+    nw::math::VEC3 acceleration;
+    if (res->isWorldGravity)
+    {
+        acceleration.x = cres->childGravity.x * mrt->m[0][0] + cres->childGravity.y * mrt->m[1][0] + cres->childGravity.z * mrt->m[2][0];
+        acceleration.y = cres->childGravity.x * mrt->m[0][1] + cres->childGravity.y * mrt->m[1][1] + cres->childGravity.z * mrt->m[2][1];
+        acceleration.z = cres->childGravity.x * mrt->m[0][2] + cres->childGravity.y * mrt->m[1][2] + cres->childGravity.z * mrt->m[2][2];
+    }
+    else
+    {
+        acceleration = cres->childGravity;
+    }
+    _integrateAxis(ptcl->pos.x, ptcl->vel.x, acceleration.x, cres->childAirRegist, ptcl->dynamicsRnd, cnt, e->frameRate);
+    _integrateAxis(ptcl->pos.y, ptcl->vel.y, acceleration.y, cres->childAirRegist, ptcl->dynamicsRnd, cnt, e->frameRate);
+    _integrateAxis(ptcl->pos.z, ptcl->vel.z, acceleration.z, cres->childAirRegist, ptcl->dynamicsRnd, cnt, e->frameRate);
 
     //if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_ALPHA_ANIM)
     //{
-        if (cnt < cres->childAlphaBaseFrame)
-            ptcl->alpha += ptcl->alphaAnim->alphaAddSec1 * e->frameRate;
-
-        else if (cnt >= cres->childAlphaStartFrame)
-            ptcl->alpha += ptcl->alphaAnim->alphaAddSec2 * e->frameRate;
+        _accumulateSection(ptcl->alpha, ptcl->alphaAnim->alphaAddSec1,
+            _sectionOverlap(cnt, e->frameRate, 0.0f, static_cast<f32>(cres->childAlphaBaseFrame)));
+        _accumulateSection(ptcl->alpha, ptcl->alphaAnim->alphaAddSec2,
+            _sectionOverlap(cnt, e->frameRate, static_cast<f32>(cres->childAlphaStartFrame), static_cast<f32>(ptcl->life)));
     //}
 
     //if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_SCALE_ANIM)
     //{
-        if (cnt >= cres->childScaleStartFrame)
-        {
-            ptcl->scale.x += ptcl->scaleAnim->scaleAddSec1.x * e->frameRate;
-            ptcl->scale.y += ptcl->scaleAnim->scaleAddSec1.y * e->frameRate;
-        }
+        const f32 scaleTime = _sectionOverlap(cnt, e->frameRate,
+                                              static_cast<f32>(cres->childScaleStartFrame),
+                                              static_cast<f32>(ptcl->life));
+        _accumulateSection(ptcl->scale.x, ptcl->scaleAnim->scaleAddSec1.x, scaleTime);
+        _accumulateSection(ptcl->scale.y, ptcl->scaleAnim->scaleAddSec1.y, scaleTime);
     //}
 
-    //if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_ROTATE)
-    //{
-        ptcl->rot.x += ptcl->rotVel.x * e->frameRate;
-        ptcl->rot.y += ptcl->rotVel.y * e->frameRate;
-        ptcl->rot.z += ptcl->rotVel.z * e->frameRate;
-    //}
-
-    //if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_ROT_REGIST)
-    //{
-        f32 rotRegist = cres->childRotRegist + (1.0f - cres->childRotRegist) * invRatio;
-        ptcl->rotVel *= rotRegist;
-    //}
+    _integrateAxis(ptcl->rot.x, ptcl->rotVel.x, 0.0f, cres->childRotRegist, 1.0f, cnt, e->frameRate);
+    _integrateAxis(ptcl->rot.y, ptcl->rotVel.y, 0.0f, cres->childRotRegist, 1.0f, cnt, e->frameRate);
+    _integrateAxis(ptcl->rot.z, ptcl->rotVel.z, 0.0f, cres->childRotRegist, 1.0f, cnt, e->frameRate);
 
     if (res->childFlg & EFT_CHILD_FLAG_IS_TEXTURE_PAT_ANIM)
         _calcChildTexPatAnim(res, cres, ptcl);
@@ -617,10 +537,11 @@ u32 EmitterCalc::CalcChildParticleBehavior(EmitterInstance* __restrict e, PtclIn
         _calcField(res, e, ptcl);
 
     #define POSDIFF_MIN_VEL 0.0001f
+    const f32 invFrameRate = e->frameRate > 0.0f ? 1.0f / e->frameRate : 0.0f;
     nw::math::VEC3 vel;
-    vel.x =  ptcl->pos.x - old_pos_x;
-    vel.y =  ptcl->pos.y - old_pos_y;
-    vel.z =  ptcl->pos.z - old_pos_z;
+    vel.x = (ptcl->pos.x - old_pos_x) * invFrameRate;
+    vel.y = (ptcl->pos.y - old_pos_y) * invFrameRate;
+    vel.z = (ptcl->pos.z - old_pos_z) * invFrameRate;
 
     if (std::fabs(vel.x) > POSDIFF_MIN_VEL ||
         std::fabs(vel.y) > POSDIFF_MIN_VEL ||
@@ -637,15 +558,9 @@ u32 EmitterCalc::CalcChildParticleBehavior(EmitterInstance* __restrict e, PtclIn
 
     //if (e->behaviorFlag & EFT_EMITTER_BEHAVIOR_FLAG_WLD_POSDIF)
     //{
-        ptcl->worldPosDiff.x =  msrt->m[0][0] * ptcl->posDiff.x * e->frameRate +
-                                msrt->m[0][1] * ptcl->posDiff.y * e->frameRate +
-                                msrt->m[0][2] * ptcl->posDiff.z * e->frameRate;
-        ptcl->worldPosDiff.y =  msrt->m[1][0] * ptcl->posDiff.x * e->frameRate +
-                                msrt->m[1][1] * ptcl->posDiff.y * e->frameRate +
-                                msrt->m[1][2] * ptcl->posDiff.z * e->frameRate;
-        ptcl->worldPosDiff.z =  msrt->m[2][0] * ptcl->posDiff.x * e->frameRate +
-                                msrt->m[2][1] * ptcl->posDiff.y * e->frameRate +
-                                msrt->m[2][2] * ptcl->posDiff.z * e->frameRate;
+        ptcl->worldPosDiff.x = msrt->m[0][0] * ptcl->posDiff.x + msrt->m[0][1] * ptcl->posDiff.y + msrt->m[0][2] * ptcl->posDiff.z;
+        ptcl->worldPosDiff.y = msrt->m[1][0] * ptcl->posDiff.x + msrt->m[1][1] * ptcl->posDiff.y + msrt->m[1][2] * ptcl->posDiff.z;
+        ptcl->worldPosDiff.z = msrt->m[2][0] * ptcl->posDiff.x + msrt->m[2][1] * ptcl->posDiff.y + msrt->m[2][2] * ptcl->posDiff.z;
     //}
 
     ptcl->cnt += e->frameRate;

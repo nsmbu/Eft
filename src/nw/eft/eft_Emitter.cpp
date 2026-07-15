@@ -52,6 +52,15 @@ void EmitterInstance::Init(const SimpleEmitterData* resource)
     isCalculated       = false;
     stopDraw           = false;
 
+    entryNum                       = 0;
+    childEntryNum                  = 0;
+    stripeVertexNum                = 0;
+    ptclAttributeBuffer            = NULL;
+    childPtclAttributeBuffer       = NULL;
+    stripeBuffer                   = NULL;
+    emitterDynamicUniformBlock     = NULL;
+    childEmitterDynamicUniformBlock = NULL;
+
     for (u32 i = 0; i < EFT_SHADER_TYPE_MAX; i++)
     {
         shader[i]      = NULL;

@@ -35,7 +35,7 @@ void EmitterCalc::CalcFluctuation(EmitterInstance* __restrict e, PtclInstance* _
     const ComplexEmitterData* res  = static_cast<const ComplexEmitterData*>(e->res);
     const FluctuationData*    fres = reinterpret_cast<const FluctuationData*>((uintptr_t)res + res->fluctuationDataOffset);
 
-    s32 tblIx = ((s32)((s32)ptcl->cnt * fres->fluctuationFreq) + ptcl->rnd * fres->fluctuationPhaseRnd) & EFT_FLUCTUATION_TABLE_MASK;
+    s32 tblIx = (static_cast<s32>(static_cast<s32>(ptcl->cnt) * fres->fluctuationFreq) + ptcl->rnd * fres->fluctuationPhaseRnd) & EFT_FLUCTUATION_TABLE_MASK;
     f32 fluctuation = 1.0f - sFluctuationTbl[tblIx] * fres->fluctuationScale;
 
     if (res->fluctuationFlg & EFT_FLUCTUATION_FALG_APPLY_ALPHA) ptcl->fluctuationAlpha = fluctuation;

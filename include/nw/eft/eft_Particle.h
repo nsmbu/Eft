@@ -34,6 +34,7 @@ struct PtclStripe
     u32                         groupID;
     const ComplexEmitterData*   res;
     s32                         cnt;
+    f32                         frameAccumulator;
     nw::math::MTX34             emitterSRT;
     nw::math::VEC3              interpolateNextDir;
     nw::math::VEC3              p0;

@@ -1,9 +1,13 @@
 #include <nw/eft/eft_AnimKeyFrame.h>
 #include <nw/eft/eft_EmitterSet.h>
+#include <nw/eft/eft_FrameRate.h>
 #include <nw/eft/eft_EmitterSimple.h>
 #include <nw/eft/eft_Renderer.h>
 #include <nw/eft/eft_System.h>
 #include <nw/eft/eft_UniformBlock.h>
+
+#include <algorithm>
+#include <cmath>
 
 namespace nw { namespace eft {
 
@@ -76,12 +80,14 @@ void EmitterSimpleCalc::EmitSameDistance(const SimpleEmitterData* __restrict res
         if (virtualLength < res->emitDistMargin)
             virtualLength = 0.0f;
 
+        const f32 minLength = res->emitDistMin * e->frameRate;
+        const f32 maxLength = res->emitDistMax * e->frameRate;
         if (virtualLength == 0.0f)
-            virtualLength = res->emitDistMin;
-        else if (virtualLength < res->emitDistMin)
-            virtualLength = virtualLength * res->emitDistMin / virtualLength;
-        else if (res->emitDistMax < virtualLength)
-            virtualLength = virtualLength * res->emitDistMax / virtualLength;
+            virtualLength = minLength;
+        else if (virtualLength < minLength)
+            virtualLength = minLength;
+        else if (maxLength < virtualLength)
+            virtualLength = maxLength;
 
         vessel += virtualLength;
         s32 count = (s32)(vessel / res->emitDistUnit); // No division-by-zero check
@@ -130,7 +136,7 @@ void EmitterSimpleCalc::CalcEmitter(EmitterInstance* e)
     {
         isParticleEmit = !res->isStopEmitInFade;
 
-        e->fadeAlpha -= res->alphaAddInFade;
+        e->fadeAlpha -= res->alphaAddInFade * e->frameRate;
         if (e->fadeAlpha <= 0.0f)
             return mSys->KillEmitter(e);
     }
@@ -138,7 +144,7 @@ void EmitterSimpleCalc::CalcEmitter(EmitterInstance* e)
     {
         isParticleEmit = true;
 
-        e->fadeAlpha += res->alphaAddInFade;
+        e->fadeAlpha += res->alphaAddInFade * e->frameRate;
         if (e->fadeAlpha > 1.0f)
             e->fadeAlpha = 1.0f;
     }
@@ -146,79 +152,31 @@ void EmitterSimpleCalc::CalcEmitter(EmitterInstance* e)
     ApplyAnim(e);
     ApplyTransformAnim(e);
 
-    s32 cnt      = (s32)e->cnt;
-    s32 localCnt = cnt - set->mStartFrame;
+    f32 localCnt = e->cnt - set->mStartFrame;
 
     if (localCnt < res->endFrame && isParticleEmit)
     {
-        if (localCnt >= res->startFrame)
+        if (!res->emitDistEnabled)
         {
-            if (!res->emitDistEnabled)
+            _forEachAuthoredFrame(e->cnt, e->frameRate, [&](s32 tick, f32 frameOffset)
             {
-                f32 interval = e->emissionInterval * e->controller->mEmissionInterval;
-
-                f32 loopf = 0.0f;
-                s32 pcnt  = (s32)e->preCnt;
-                s32 ecnt  = (s32)e->emitCnt;
-
-                // Always emit the first time
-                if (!e->isEmitted)
-                    loopf = 1.0f;
-
-                if ((s32)interval != 0)
+                const f32 tickLocalCnt = static_cast<f32>(tick) - set->mStartFrame;
+                if (tickLocalCnt < static_cast<f32>(res->startFrame) ||
+                    tickLocalCnt >= static_cast<f32>(res->endFrame))
                 {
-                    if (e->frameRate >= 1.0f)
-                    {
-                        if (ecnt >= interval)
-                        {
-                            loopf      = 1.0f;
-                            e->emitCnt = 0.0f;
-                        }
-                        else
-                        {
-                            e->emitCnt += e->frameRate;
-                        }
-                    }
-                    else
-                    {
-                        if (e->emitCnt >= interval && cnt != pcnt)
-                        {
-                            loopf         = 1.0f;
-                            e->emitCnt    = 0.0f;
-                            e->emitSaving = 0.0f;
-                            e->preEmitCnt = e->cnt;
-                        }
-                        else
-                        {
-                            e->emitCnt += e->frameRate;
-                        }
-                    }
-                }
-                else
-                {
-                    if (e->frameRate >= 1.0f)
-                        loopf = 1.0f;
-
-                    else
-                    {
-                        loopf = e->cnt - e->preEmitCnt + e->emitSaving;
-
-                        if (e->emitSaving >= interval)
-                            e->emitSaving -= interval;
-
-                        e->emitSaving += e->cnt - e->preEmitCnt - (s32)loopf;
-                        e->emitCnt     = 0.0f;
-                        e->preEmitCnt  = e->cnt;
-
-                        if (res->ptclLife == 1)
-                            loopf = 1.0f;
-                    }
+                    return;
                 }
 
-                s32 loop = (s32)loopf;
+                const f32 interval = e->emissionInterval * e->controller->mEmissionInterval;
 
-                for (s32 i = 0; i < loop; i++)
+                auto emitAt = [&]()
                 {
+                    PtclInstance* const previousHead = e->ptclHead;
+                    const f32 updateCnt = e->cnt;
+                    e->cnt = static_cast<f32>(tick);
+                    ApplyAnim(e);
+                    ApplyTransformAnim(e);
+
                     if (set->mNumParticleEmissionPoint > 0)
                     {
                         for (s32 j = 0; j < set->mNumParticleEmissionPoint; j++)
@@ -239,14 +197,47 @@ void EmitterSimpleCalc::CalcEmitter(EmitterInstance* e)
                     {
                         mEmitFunctions[res->volumeType](e);
                     }
+
+                    e->cnt = updateCnt;
+                    ApplyAnim(e);
+                    ApplyTransformAnim(e);
+
+                    for (PtclInstance* ptcl = e->ptclHead;
+                         ptcl != previousHead;
+                         ptcl = ptcl->next)
+                    {
+                        ptcl->cnt = -frameOffset;
+                    }
+                };
+
+                bool emit = !e->isEmitted;
+                if (static_cast<s32>(interval) != 0)
+                {
+                    if (static_cast<s32>(e->emitCnt) >= interval)
+                    {
+                        emit = true;
+                        e->emitCnt = 0.0f;
+                    }
+                    else
+                    {
+                        e->emitCnt += 1.0f;
+                    }
+                }
+                else
+                {
+                    emit = true;
+                    e->emitCnt = 0.0f;
                 }
 
+                if (emit)
+                    emitAt();
+
                 e->emissionInterval = res->lifeStep + e->rnd.GetS32(res->lifeStepRnd);
-            }
-            else
-            {
-                EmitSameDistance(res, e);
-            }
+            });
+        }
+        else if (localCnt >= res->startFrame)
+        {
+            EmitSameDistance(res, e);
         }
     }
     else
@@ -324,18 +315,35 @@ u32 EmitterSimpleCalc::CalcParticle(EmitterInstance* emitter, CpuCore core, bool
 
     while (ptcl)
     {
-        s32 cntS = (s32)ptcl->cnt;
         if (ptcl->res)
         {
             if (!skipBehavior)
             {
-                if (cntS >= ptcl->life || (ptcl->life == 1 && ptcl->cnt != 0.0f))
+                const f32 emitterFrameRate = emitter->frameRate;
+                f32 particleFrameRate = emitterFrameRate;
+                if (ptcl->cnt < 0.0f)
+                {
+                    particleFrameRate = std::max(0.0f, emitterFrameRate + ptcl->cnt);
+                    ptcl->cnt = 0.0f;
+                }
+
+                const f32 remainingLife = static_cast<f32>(ptcl->life) - ptcl->cnt;
+                if (remainingLife <= 0.0f)
                 {
                     RemoveParticle(emitter, ptcl, core);
                     goto next;
                 }
 
+                const f32 liveFrameRate = std::min(particleFrameRate, remainingLife);
+                emitter->frameRate = liveFrameRate;
                 CalcSimpleParticleBehavior(emitter, ptcl, core);
+                emitter->frameRate = emitterFrameRate;
+
+                if (particleFrameRate > liveFrameRate)
+                {
+                    RemoveParticle(emitter, ptcl, core);
+                    goto next;
+                }
             }
 
             if (particleCB != NULL)
