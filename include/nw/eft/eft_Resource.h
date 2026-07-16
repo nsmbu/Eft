@@ -15,7 +15,7 @@ class System;
 
 struct ResourceBind
 {
-    ResourceBind() { source = NULL; }
+    ResourceBind() { source = NULL; saveNativeEmitterArray = NULL; }
 
     EmitterSetData*         source;
     s32                     resourceID;
@@ -23,6 +23,7 @@ struct ResourceBind
     const char*             saveName;
     s32                     saveNumEmitter;
     EmitterTblData*         saveTbl;
+    const CommonEmitterData* const* saveNativeEmitterArray;
     u32                     saveUserData;
 
     ParticleShader**        shaderArray;
@@ -36,6 +37,7 @@ struct ResourceEmitterSet
 {
     EmitterSetData*     setData;
     EmitterTblData*     tblData;
+    const CommonEmitterData* const* nativeEmitterArray;
     s32                 numEmitter;
     u32                 userData;
 
@@ -90,7 +92,8 @@ public:
 
     const CommonEmitterData* GetEmitterData(s32 emitterSetID, s32 emitterID) const
     {
-        return mResEmitterSet[emitterSetID].tblData[emitterID].emitter.get();
+        const ResourceEmitterSet& set = mResEmitterSet[emitterSetID];
+        return set.nativeEmitterArray ? set.nativeEmitterArray[emitterID] : set.tblData[emitterID].emitter.get();
     }
 
     const EmitterSetData* GetEmitterSetData(s32 emitterSetID) const
@@ -120,7 +123,7 @@ public:
 
     const char* GetEmitterName(s32 emitterSetID, s32 emitterID) const
     {
-        return  mResEmitterSet[emitterSetID].tblData[emitterID].emitter.get()->name.get();
+        return GetEmitterData(emitterSetID, emitterID)->name.get();
     }
 
     ResourceEmitterSet* GetEmitterSetResource(s32 emitterSetID) const
@@ -177,7 +180,10 @@ private:
     static void DeleteTextureHandle(Heap* heap, TextureRes& texRes, bool isOriginalTexture);
 
 public:
+    static bool CreatePreviewNativeTexture(Heap* heap, void* textureData, TextureRes& texture);
+    static void DeletePreviewNativeTexture(Heap* heap, TextureRes& texture);
     bool BindResource(s32 targetSetID, ResourceBind* bind, EmitterTblData* newTbl, s32 newNumEmitter, const char* newSetName, u32 newUserData, u32 newShaderNum, ParticleShader** newShaderArray, u32 newPrimitiveNum, Primitive** newPrimitiveArray);
+    bool BindResourceNative(s32 targetSetID, ResourceBind* bind, const CommonEmitterData* const* emitters, s32 newNumEmitter, const char* newSetName, u32 newUserData, u32 newShaderNum, ParticleShader** newShaderArray, u32 newPrimitiveNum, Primitive** newPrimitiveArray);
     bool UnbindResource(ResourceBind* bind, bool isReBind, bool isKill);
 
     ParticleShader* GetShader(u32 index);

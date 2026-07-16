@@ -330,7 +330,7 @@ static inline nw::eft::ChildData* LoadNwEftChildData(void* data, bool is_be = tr
         Swap32(&childData->childEmitStep);
         Swap32(&childData->childVelInheritRate);
         Swap32(&childData->childFigureVel);
-        Swap32(&childData->childInitPosRand, 3);
+        Swap32(&childData->childRandVel, 3);
         Swap32(&childData->childInitPosRand);
         Swap32(&childData->childDynamicsRandom);
         Swap32(&childData->childBlendType);
@@ -340,6 +340,7 @@ static inline nw::eft::ChildData* LoadNwEftChildData(void* data, bool is_be = tr
         Swap32(&childData->childDisplaySide);
         Swap32(&childData->childColor0, 3);
         Swap32(&childData->childColor1, 3);
+        Swap32(&childData->childColorScale);
         Swap32(&childData->primitiveColorBlend);
         Swap32(&childData->primitiveAlphaBlend);
         Swap32(&childData->childAlpha);

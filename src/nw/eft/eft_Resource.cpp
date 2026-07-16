@@ -129,6 +129,8 @@ void Resource::CreateFtexbTextureHandle(Heap* heap, void* texture_data, TextureR
     linear_surface.mipPtr.set(NULL);
 
     GX2CopySurface(&surface, 0, 0, &linear_surface, 0, 0);
+    surface.imagePtr.release();
+    surface.mipPtr.release();
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
@@ -389,6 +391,7 @@ void Resource::Initialize(Heap* heap, void* bin, s32 resourceID, System* ptclSys
         void* texture_addr = NULL;
 
         resSet->setData        = LoadNwEftEmitterSetData(&((reinterpret_cast<EmitterSetData*>(mHeader + 1))[i]));
+        resSet->nativeEmitterArray = NULL;
         resSet->setData->name.set(&mNameTbl[resSet->setData->namePos]);
         resSet->setName        = resSet->setData->name.get();
         resSet->numEmitter     = resSet->setData->numEmitter;
@@ -484,6 +487,9 @@ void Resource::DeleteTextureHandle(Heap* heap, TextureRes& texRes, bool isOrigin
     if (heap != NULL)
         heap->Free(texRes.gx2Texture.surface.imagePtr.get());
 
+    texRes.gx2Texture.surface.imagePtr.release();
+    texRes.gx2Texture.surface.mipPtr.release();
+
     glDeleteTextures(1, &texRes.handle);
 #endif // EFT_IS_PC
 
@@ -493,6 +499,19 @@ void Resource::DeleteTextureHandle(Heap* heap, TextureRes& texRes, bool isOrigin
 #endif // EFT_IS_CAFE
 
     texRes.handle = 0;
+}
+
+bool Resource::CreatePreviewNativeTexture(Heap* heap, void* textureData, TextureRes& texture)
+{
+    if (heap == NULL || textureData == NULL || texture.nativeDataSize <= 0)
+        return false;
+    CreateFtexbTextureHandle(heap, textureData, texture);
+    return texture.handle != 0;
+}
+
+void Resource::DeletePreviewNativeTexture(Heap* heap, TextureRes& texture)
+{
+    DeleteTextureHandle(heap, texture, false);
 }
 
 void Resource::Finalize(Heap* heap)
@@ -509,22 +528,23 @@ void Resource::Finalize(Heap* heap)
         for (s32 j = 0; j < resSet->setData->numEmitter; j++)
         {
             EmitterTblData* e = &resSet->tblData[j];
+            CommonEmitterData* emitter = e->emitter.get();
 
-            if (e->emitter.get()->texRes[EFT_TEXTURE_SLOT_0].handle)
+            if (emitter->texRes[EFT_TEXTURE_SLOT_0].handle)
             {
-                bool isOriginalTexture = (e->emitter.get()->texRes[EFT_TEXTURE_SLOT_0].nativeDataSize == 0) ? true : false;
-                DeleteTextureHandle(heapTemp, e->emitter.get()->texRes[EFT_TEXTURE_SLOT_0], isOriginalTexture);
+                bool isOriginalTexture = (emitter->texRes[EFT_TEXTURE_SLOT_0].nativeDataSize == 0) ? true : false;
+                DeleteTextureHandle(heapTemp, emitter->texRes[EFT_TEXTURE_SLOT_0], isOriginalTexture);
             }
 
-            if (e->emitter.get()->texRes[EFT_TEXTURE_SLOT_1].handle)
+            if (emitter->texRes[EFT_TEXTURE_SLOT_1].handle)
             {
-                bool isOriginalTexture = (e->emitter.get()->texRes[EFT_TEXTURE_SLOT_1].nativeDataSize == 0) ? true : false;
-                DeleteTextureHandle(heapTemp, e->emitter.get()->texRes[EFT_TEXTURE_SLOT_1], isOriginalTexture);
+                bool isOriginalTexture = (emitter->texRes[EFT_TEXTURE_SLOT_1].nativeDataSize == 0) ? true : false;
+                DeleteTextureHandle(heapTemp, emitter->texRes[EFT_TEXTURE_SLOT_1], isOriginalTexture);
             }
 
-            if (e->emitter.get()->type == EFT_EMITTER_TYPE_COMPLEX)
+            if (emitter->type == EFT_EMITTER_TYPE_COMPLEX)
             {
-                ComplexEmitterData* complex = static_cast<ComplexEmitterData*>(e->emitter.get());
+                ComplexEmitterData* complex = static_cast<ComplexEmitterData*>(emitter);
                 if (complex->childFlg & EFT_CHILD_FLAG_ENABLE)
                 {
                     ChildData* cres = reinterpret_cast<ChildData*>(complex + 1);
@@ -535,7 +555,11 @@ void Resource::Finalize(Heap* heap)
                     }
                 }
             }
+            emitter->name.release();
+            emitter->animKeyTable.animKeyTable.release();
+            e->emitter.release();
         }
+        resSet->setData->name.release();
     }
 
     for (u32 i = 0; i < mShaderNum; i++)
@@ -602,7 +626,7 @@ bool Resource::BindResource(s32 targetSetID, ResourceBind* bind, EmitterTblData*
     void* oldRes[EFT_EMITTER_INSET_NUM];
     s32   numRes = resSet->numEmitter;
     for (s32 i = 0; i < numRes; i++)
-        oldRes[i] = resSet->tblData[i].emitter.get();
+        oldRes[i] = const_cast<CommonEmitterData*>(GetEmitterData(targetSetID, i));
 
     bind->source                 = resSet->setData;
     bind->emitterSetID           = targetSetID;
@@ -610,6 +634,7 @@ bool Resource::BindResource(s32 targetSetID, ResourceBind* bind, EmitterTblData*
     bind->saveName               = resSet->setName;
     bind->saveNumEmitter         = resSet->numEmitter;
     bind->saveTbl                = resSet->tblData;
+    bind->saveNativeEmitterArray = resSet->nativeEmitterArray;
     bind->saveUserData           = resSet->userData;
 
     bind->shaderNum              = resSet->shaderNum;
@@ -619,6 +644,7 @@ bool Resource::BindResource(s32 targetSetID, ResourceBind* bind, EmitterTblData*
     bind->primitiveArray         = resSet->primitiveArray;
 
     resSet->tblData              = newTbl;
+    resSet->nativeEmitterArray   = NULL;
     resSet->numEmitter           = newNumEmitter;
     resSet->setName              = newSetName;
     resSet->userData             = newUserData;
@@ -634,6 +660,43 @@ bool Resource::BindResource(s32 targetSetID, ResourceBind* bind, EmitterTblData*
     return true;
 }
 
+bool Resource::BindResourceNative(s32 targetSetID, ResourceBind* bind, const CommonEmitterData* const* emitters, s32 newNumEmitter, const char* newSetName, u32 newUserData, u32 newShaderNum, ParticleShader** newShaderArray, u32 newPrimitiveNum, Primitive** newPrimitiveArray)
+{
+    if (bind == NULL || bind->source != NULL || newNumEmitter < 0 ||
+        newNumEmitter > EFT_EMITTER_INSET_NUM || (newNumEmitter != 0 && emitters == NULL))
+        return false;
+    ResourceEmitterSet* resSet = &mResEmitterSet[targetSetID];
+    void* oldRes[EFT_EMITTER_INSET_NUM];
+    const s32 numRes = resSet->numEmitter;
+    for (s32 i = 0; i < numRes; ++i)
+        oldRes[i] = const_cast<CommonEmitterData*>(GetEmitterData(targetSetID, i));
+
+    bind->source = resSet->setData;
+    bind->emitterSetID = targetSetID;
+    bind->resourceID = mResourceID;
+    bind->saveName = resSet->setName;
+    bind->saveNumEmitter = resSet->numEmitter;
+    bind->saveTbl = resSet->tblData;
+    bind->saveNativeEmitterArray = resSet->nativeEmitterArray;
+    bind->saveUserData = resSet->userData;
+    bind->shaderNum = resSet->shaderNum;
+    bind->shaderArray = resSet->shaderArray;
+    bind->primitiveNum = resSet->primitiveNum;
+    bind->primitiveArray = resSet->primitiveArray;
+
+    resSet->tblData = NULL;
+    resSet->nativeEmitterArray = emitters;
+    resSet->numEmitter = newNumEmitter;
+    resSet->setName = newSetName;
+    resSet->userData = newUserData;
+    resSet->shaderNum = newShaderNum;
+    resSet->shaderArray = newShaderArray;
+    resSet->primitiveNum = newPrimitiveNum;
+    resSet->primitiveArray = newPrimitiveArray;
+    mSystem->ReCreateEmitter(oldRes, numRes, mResourceID, targetSetID, false);
+    return true;
+}
+
 bool Resource::UnbindResource(ResourceBind* bind, bool isReBind, bool isKill)
 {
     ResourceEmitterSet* resSet = &mResEmitterSet[bind->emitterSetID];
@@ -641,9 +704,10 @@ bool Resource::UnbindResource(ResourceBind* bind, bool isReBind, bool isKill)
     void* oldRes[EFT_EMITTER_INSET_NUM];
     s32   numRes = resSet->numEmitter;
     for (s32 i = 0; i < numRes; i++)
-        oldRes[i] = resSet->tblData[i].emitter.get();
+        oldRes[i] = const_cast<CommonEmitterData*>(GetEmitterData(bind->emitterSetID, i));
 
     resSet->tblData    = bind->saveTbl;
+    resSet->nativeEmitterArray = bind->saveNativeEmitterArray;
     resSet->numEmitter = bind->saveNumEmitter;
     resSet->setName    = bind->saveName;
     resSet->userData   = bind->saveUserData;
@@ -655,6 +719,7 @@ bool Resource::UnbindResource(ResourceBind* bind, bool isReBind, bool isKill)
     resSet->primitiveArray = bind->primitiveArray;
 
     bind->source = NULL;
+    bind->saveNativeEmitterArray = NULL;
 
     if (isReBind)
         mSystem->ReCreateEmitter(oldRes, numRes, mResourceID, bind->emitterSetID, false);
