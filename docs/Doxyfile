@@ -4,7 +4,7 @@ INPUT                  = include/ src/
 EXCLUDE_PATTERNS       =
 EXCLUDE_SYMBOLS        =
 PREDEFINED             = cafe
-TAGFILES               = Sys.tag=https://nsmbu.github.io/Sys/
+TAGFILES               = Sys.tag=https://docs.nsmbu.net/sys/
 GENERATE_TAGFILE       = docs/html/Eft.tag
 RECURSIVE              = YES
 JAVADOC_BANNER         = YES
